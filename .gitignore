@@ -1,0 +1,8 @@
+.DS_Store
+build/
+*.gguf
+*.xcuserstate
+xcuserdata/
+.venv/
+__pycache__/
+node_modules/

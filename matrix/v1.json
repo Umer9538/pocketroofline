@@ -1,0 +1,24 @@
+{
+  "matrixVersion": "v1",
+  "status": "draft",
+  "note": "DRAFT until the first A15 run lands. Once pinned, this file is frozen: changes create v2 and never alter v1 results. Model selection deliberately overlaps RooflineBench's edge and mobile-class tiers so the two datasets are comparable.",
+  "devices": [
+    { "model": "iPhone 13", "soc": "A15 Bionic", "ramGB": 4, "identifier": "iPhone14,5", "role": "primary" },
+    { "model": "Mac mini (M1, 2020)", "soc": "Apple M1", "ramGB": 16, "role": "calibration-anchor" }
+  ],
+  "models": [
+    { "id": "Qwen2.5-0.5B-Instruct", "params": 0.5, "attention": "GQA" },
+    { "id": "SmolLM2-1.7B-Instruct", "params": 1.7, "attention": "MHA" },
+    { "id": "Qwen2.5-1.5B-Instruct", "params": 1.5, "attention": "GQA" },
+    { "id": "Llama-3.2-3B-Instruct", "params": 3.2, "attention": "GQA" }
+  ],
+  "quantizations": ["Q4_K_M", "Q8_0"],
+  "backends": ["llama.cpp-metal", "mlc", "coreml-ane"],
+  "regimes": [
+    { "label": "SISO", "promptTokens": 128, "generateTokens": 128 },
+    { "label": "LISO", "promptTokens": 2048, "generateTokens": 128 },
+    { "label": "SILO", "promptTokens": 128, "generateTokens": 1024 }
+  ],
+  "repeatsMinimum": 5,
+  "repeatsForClaimedDifference": 20
+}
