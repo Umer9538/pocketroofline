@@ -22,6 +22,18 @@ airplane mode, Wi-Fi and Bluetooth off, unplugged · 3 regimes × 5 repeats
 perfectly monotonic (Spearman rho −1.00) while SISO holds to 0.9% CV — so it is
 thermal, not noise.
 
+**The control (same model, same regimes, same commit, same day):**
+
+| Device | SISO decode | LISO decode | SILO (5 long generations) |
+|---|---|---|---|
+| iPhone 13 (A15) | 42.80 | 42.42 | **40.53 → 30.93** (rho −1.00) |
+| MacBook Pro (M1) | 61.10 | 62.32 | **64.55 flat** (rho +0.10) |
+
+**Roofline placement:** decode reads all 0.636 GB of weights per token, so the A15
+achieves 27.2 GB/s (64–80% of published peak) vs the M1's 38.9 GB/s (57%). The phone
+uses *more* of its memory system than the laptop — it just has a much smaller ceiling,
+and throttling takes it down to 19.7 GB/s.
+
 > Recommended: run the cold-start session first (10-minute cooldown to `nominal`)
 > and publish both. "Warm start vs cold start on the same phone" is a second
 > finding and pre-empts the first critique a reviewer will make.
@@ -55,7 +67,12 @@ GPUs, laptops, and single-board computers. Plugged in, actively cooled, no
 thermal envelope like a phone in your hand. So I started measuring phones, using
 the same roofline methodology, publishing every repeat and every caveat.
 
+I ran the identical workload on a MacBook M1 as a control: it holds 64.6 tok/s flat
+across all five long generations. Same model, same code, same day. The laptop is
+plugged in and actively cooled — it simply cannot show you what a phone does.
+
 Open data, MIT: https://github.com/Umer9538/pocketroofline
+Charts and every repeat: https://umer9538.github.io/pocketroofline/
 
 #OnDeviceAI #iOS #LLM #MobileDevelopment #OpenSource
 
@@ -90,8 +107,20 @@ changed mid-run is flagged and excluded from aggregates but retained in the data
 and SILO's mean is explicitly not a steady-state number since the series is
 non-stationary — the curve is the result, not its average.
 
+Control, run the same day with the identical model/regimes/commit — a MacBook Pro
+(M1) on mains power holds decode flat at 64.55 tok/s (rho +0.10) across the same five
+long generations. Thermal behaviour is the thing phone benchmarks have to capture, and
+a plugged-in laptop, a Jetson or a Pi structurally cannot show it.
+
+Roofline placement: decode reads all 0.636 GB of weights per token, so achieved memory
+bandwidth is 27.2 GB/s on the A15 (64-80% of published peak — sources disagree on the
+A15's peak, so it's a range, and a STREAM ceiling is owed) vs 38.9 GB/s on the M1
+(57%). The phone extracts a higher fraction of its memory system; it just has a much
+smaller ceiling, and throttling drops it to 19.7 GB/s.
+
 Everything is committed JSON and the page's numbers are generated from it, not
 typed: https://github.com/Umer9538/pocketroofline
+Page: https://umer9538.github.io/pocketroofline/
 
 Method critiques welcome. If you have an iPhone 15 Pro+ or a Pixel 8+, a capture
 takes about ten minutes and adds a device to the matrix.
