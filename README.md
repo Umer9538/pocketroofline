@@ -28,7 +28,7 @@ iPhone 13 (A15) · iOS 26.6.1 (23G83) · TinyLlama-1.1B Q4_0 · llama.cpp-Metal
 | Regime | Prefill tok/s | Decode tok/s | Thermal state |
 |---|---|---|---|
 | SISO (128 in / 128 out) | 504.0 | **42.80** (sd 0.37) | fair, stable |
-| LISO (2048 in / 128 out) | 413.0 (−12.3%) | 42.58 | fair → **serious** |
+| LISO (2048 in / 128 out) | 402.6 (−12.3%) | 42.42 | fair → **serious** |
 | SILO (128 in / 1024 out) | 406.9 (−23.9%) | **40.53 → 30.93 (−23.7%)** | serious throughout |
 
 Under sustained generation, decode falls **monotonically** across all five
@@ -50,6 +50,23 @@ steady-state aggregates while retained in full; and SILO's mean is explicitly
 construction — the throttling curve is the result, not its average.
 
 Raw records: [`results/`](results/) — one JSON per regime, every repeat retained.
+Generated page with charts and the full per-repeat tables:
+**[umer9538.github.io/pocketroofline](https://umer9538.github.io/pocketroofline/)**
+
+### The control: the same workload, plugged in
+
+The identical model, quantisation, regime, backend and commit were run the same
+day on a MacBook Pro (M1) — mains power, active cooling:
+
+| Device | SISO decode | LISO decode | SILO decode (5 long generations) |
+|---|---|---|---|
+| iPhone 13 (A15) | 42.80 | 42.42 | **40.53 → 30.93** (rho −1.00) |
+| MacBook Pro (M1) | 61.10 | 62.32 | **64.55 flat** (rho +0.10) |
+
+The laptop shows no decline under the workload that costs the phone a quarter of
+its throughput. Thermal behaviour, not raw silicon speed, is the thing phone
+benchmarks have to capture — and it is precisely what a plugged-in laptop, a
+Jetson or a Raspberry Pi cannot show.
 
 ---
 
@@ -64,9 +81,14 @@ and running a general-purpose OS that is not under our control.
 estimates; it does not report error bars, repeated-run variance, or confidence
 intervals. Phone measurements need them more than desktop measurements do —
 thermal state, background activity, and DVFS make a single run close to
-meaningless. Every figure published here carries a Wilson or Newcombe interval
-computed by [`unswayed`](https://github.com/Umer9538/unswayed), and every
-underlying run is published alongside it.
+meaningless. Every published figure is computed from the committed repeats by
+[`harness/report.py`](harness/report.py) — mean, standard deviation, a bootstrap
+95% interval on the mean, and a Spearman rank trend that separates a genuine
+monotonic decline from scatter — and every underlying run is published alongside
+it. Where a comparison between two devices or builds needs a certified verdict
+rather than a descriptive interval, that is
+[`unswayed`](https://github.com/Umer9538/unswayed)'s job and it is not wired in
+yet.
 
 **3. A longitudinal record.** The model x quantization x backend matrix is
 pinned and versioned. It is re-run on every iOS point release and every
@@ -109,13 +131,17 @@ These are constraints of the measurement, not caveats to be buried:
 
 | Phase | Deliverable | State |
 |---|---|---|
-| 0 | Protocol, schema, priority stake | **in progress** |
-| 1 | M1 calibration anchor vs RooflineBench; A15 first numbers | not started |
-| 2 | Full matrix; preprint; leaderboard v1 | not started |
+| 0 | Protocol, schema, priority stake | **done** |
+| 1 | M1 anchor + A15 first numbers, one model across both | **done** (warm start; cold-start session owed) |
+| 2 | Full matrix (models × quants × backends); bandwidth microbenchmark; preprint | not started |
 | 3 | Community submission ledger | not started |
 
-No measurements have been published yet. This section is the current truth and
-will be kept current.
+Published so far: one model (TinyLlama-1.1B Q4_0), one backend
+(llama.cpp-Metal), two devices, three regimes, five repeats each — the A15
+session warm-start. Not yet measured: other models and quantisations, MLC and
+Core ML backends, the STREAM-style bandwidth ceiling that fixes the ridge point,
+energy per token, and any device beyond these two. This section is the current
+truth and will be kept current.
 
 ## Layout
 

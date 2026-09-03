@@ -32,12 +32,15 @@
   .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
   .ln.emph { stroke: var(--accent); }
   .ln.ctx { stroke: var(--gray); }
+  .ln.anchor { stroke: var(--ink2); stroke-dasharray: 6 3; }
   .pt { stroke: var(--card); stroke-width: 2; }
   .pt.emph { fill: var(--accent); }
   .pt.ctx { fill: var(--gray); }
+  .pt.anchor { fill: var(--ink2); }
   .dl { font: 600 12px ui-monospace, Menlo, monospace; }
   .dl.emph { fill: var(--accent); }
   .dl.ctx { fill: var(--ink2); }
+  .dl.anchor { fill: var(--ink2); }
   figcaption { color: var(--ink2); font-size: 13px; padding: 8px 12px 10px; }
   table { border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 6px; }
   th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
@@ -79,6 +82,19 @@
     (SISO CV 0.9%). The decline is thermal, not measurement noise.
     Dashed rings mark repeats flagged for a mid-run thermal transition.</figcaption>
   </figure>
+
+  
+  <h2>The same workload, plugged in</h2>
+  <figure>
+    <svg viewBox="0 0 720 260" role="img" aria-label="Decode throughput over five consecutive long generations. The mains-powered anchor holds flat; the phone declines."><line x1="54" y1="220.0" x2="570" y2="220.0" class="grid"/><text x="44" y="224.0" class="ax" text-anchor="end">26</text><line x1="54" y1="169.5" x2="570" y2="169.5" class="grid"/><text x="44" y="173.5" class="ax" text-anchor="end">37</text><line x1="54" y1="119.0" x2="570" y2="119.0" class="grid"/><text x="44" y="123.0" class="ax" text-anchor="end">48</text><line x1="54" y1="68.5" x2="570" y2="68.5" class="grid"/><text x="44" y="72.5" class="ax" text-anchor="end">60</text><line x1="54" y1="18.0" x2="570" y2="18.0" class="grid"/><text x="44" y="22.0" class="ax" text-anchor="end">71</text><text x="54.0" y="242" class="ax" text-anchor="middle">0</text><text x="183.0" y="242" class="ax" text-anchor="middle">1</text><text x="312.0" y="242" class="ax" text-anchor="middle">2</text><text x="441.0" y="242" class="ax" text-anchor="middle">3</text><text x="570.0" y="242" class="ax" text-anchor="middle">4</text><text x="312.0" y="256" class="axt" text-anchor="middle">consecutive long generations</text><polyline points="54.0,48.6 183.0,49.5 312.0,41.3 441.0,52.6 570.0,44.9" class="ln anchor"/><circle cx="54.0" cy="48.6" r="4.5" class="pt anchor"><title>Apple M1 repeat 0: 64.27 tok/s</title></circle><circle cx="183.0" cy="49.5" r="4.5" class="pt anchor"><title>Apple M1 repeat 1: 64.07 tok/s</title></circle><circle cx="312.0" cy="41.3" r="4.5" class="pt anchor"><title>Apple M1 repeat 2: 65.92 tok/s</title></circle><circle cx="441.0" cy="52.6" r="4.5" class="pt anchor"><title>Apple M1 repeat 3: 63.38 tok/s</title></circle><circle cx="570.0" cy="44.9" r="4.5" class="pt anchor"><title>Apple M1 repeat 4: 65.11 tok/s</title></circle><polyline points="54.0,154.1 183.0,154.8 312.0,167.4 441.0,187.4 570.0,196.7" class="ln emph"/><circle cx="54.0" cy="154.1" r="4.5" class="pt emph"><title>A15 Bionic repeat 0: 40.53 tok/s</title></circle><circle cx="183.0" cy="154.8" r="4.5" class="pt emph"><title>A15 Bionic repeat 1: 40.36 tok/s</title></circle><circle cx="312.0" cy="167.4" r="4.5" class="pt emph"><title>A15 Bionic repeat 2: 37.53 tok/s</title></circle><circle cx="441.0" cy="187.4" r="4.5" class="pt emph"><title>A15 Bionic repeat 3: 33.03 tok/s</title></circle><circle cx="570.0" cy="196.7" r="4.5" class="pt emph"><title>A15 Bionic repeat 4: 30.93 tok/s</title></circle><text x="580.0" y="48.9" class="dl anchor">Apple M1 · 65.1</text><text x="580.0" y="200.7" class="dl emph">A15 Bionic · 30.9</text></svg>
+    <figcaption>Identical model, quantisation, regime, backend and commit, measured the same day on a
+    MacBook Pro (M1, 2020) (Apple M1). The mains-powered, actively cooled machine holds decode
+    flat across all five long generations (rho +0.10, 64.55 tok/s
+    mean); the phone falls 23.7% over the same workload. Thermal behaviour,
+    not raw silicon speed, is what phone benchmarks have to capture — and it is exactly what a laptop, a Jetson or a
+    Raspberry Pi cannot show you.</figcaption>
+  </figure>
+
 
   <h2>Per regime</h2>
   <div class="scroll"><table>

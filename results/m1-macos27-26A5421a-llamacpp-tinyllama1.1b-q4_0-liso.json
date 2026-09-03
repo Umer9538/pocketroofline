@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "runId": "m1-macos27-26A5421a-llamacpp-tinyllama1.1b-q4_0-liso",
+  "capturedAt": "2026-09-03T19:27:56Z",
+  "matrixVersion": "v1",
+  "device": {
+    "model": "MacBook Pro (M1, 2020)",
+    "soc": "Apple M1",
+    "ramGB": 16,
+    "identifier": "MacBookPro17,1"
+  },
+  "os": {
+    "name": "macOS",
+    "version": "27.0",
+    "build": "26A5421a"
+  },
+  "backend": {
+    "name": "llama.cpp-metal",
+    "version": "llama-bench (source build)",
+    "commit": "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "buildFlags": "-DGGML_METAL=ON -DLLAMA_CURL=OFF"
+  },
+  "model": {
+    "id": "TinyLlama-1.1B-1T-OpenOrca",
+    "params": 1.1,
+    "quant": "Q4_0",
+    "fileSha256": "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "config": {
+      "attention": "MHA"
+    }
+  },
+  "regime": {
+    "promptTokens": 2048,
+    "generateTokens": 128,
+    "label": "LISO"
+  },
+  "conditions": {
+    "charging": true,
+    "cooldownSeconds": 0
+  },
+  "repeats": [
+    {
+      "index": 0,
+      "prefillTokensPerSec": 690.995,
+      "decodeTokensPerSec": 63.268,
+      "ttftMs": 2963.843,
+      "thermalStateStart": "nominal",
+      "thermalStateEnd": "nominal"
+    },
+    {
+      "index": 1,
+      "prefillTokensPerSec": 699.691,
+      "decodeTokensPerSec": 63.611,
+      "ttftMs": 2927.006,
+      "thermalStateStart": "nominal",
+      "thermalStateEnd": "nominal"
+    },
+    {
+      "index": 2,
+      "prefillTokensPerSec": 701.743,
+      "decodeTokensPerSec": 56.065,
+      "ttftMs": 2918.447,
+      "thermalStateStart": "nominal",
+      "thermalStateEnd": "nominal"
+    },
+    {
+      "index": 3,
+      "prefillTokensPerSec": 701.987,
+      "decodeTokensPerSec": 64.542,
+      "ttftMs": 2917.431,
+      "thermalStateStart": "nominal",
+      "thermalStateEnd": "nominal"
+    },
+    {
+      "index": 4,
+      "prefillTokensPerSec": 690.227,
+      "decodeTokensPerSec": 64.096,
+      "ttftMs": 2967.14,
+      "thermalStateStart": "nominal",
+      "thermalStateEnd": "nominal"
+    }
+  ],
+  "valid": true,
+  "notes": "Calibration anchor for the iPhone 13 session captured the same day: identical model, quantisation, regimes, backend and commit, so the two devices are directly comparable. Measured with llama-bench rather than the iOS harness; llama-bench times prefill and decode as separate tests, so the i-th prefill repeat is paired with the i-th decode repeat here - the pairing is a reporting convention, not a single interleaved run. Machine on mains power with active cooling and not quiesced beyond closing foreground applications; thermalState is not exposed to llama-bench on macOS and is recorded as nominal rather than measured, which is the honest limit of this anchor. This is a base M1, not the M1 Pro used by RooflineBench - a lower tier of the same family, reported as such and never as a reproduction of their figures. The comparison that matters: across five consecutive long generations this machine holds decode flat (64.55 tok/s, no downward trend) while the iPhone 13 falls 40.53 -> 30.93 tok/s on the identical workload. A mains-powered, actively cooled machine cannot exhibit the thermal behaviour that defines phone inference, which is why the phone class needs measuring directly instead of by extrapolation."
+}

@@ -15,7 +15,7 @@ airplane mode, Wi-Fi and Bluetooth off, unplugged · 3 regimes × 5 repeats
 | Regime | Prefill tok/s | Decode tok/s | Thermal |
 |---|---|---|---|
 | SISO 128/128 | 504.0 | **42.80** (sd 0.37, CV 0.9%) | fair, stable |
-| LISO 2048/128 | 413.0 (−12.3%) | 42.42 (sd 0.08) | fair → **serious** |
+| LISO 2048/128 | 402.6 (−12.3%) | 42.42 (sd 0.08) | fair → **serious** |
 | SILO 128/1024 | 406.9 (−23.9%) | **40.53 → 30.93 (−23.7%)** | serious throughout |
 
 **Headline:** peak decode overstates sustained decode by **38%**. SILO's decline is
@@ -71,7 +71,7 @@ no phone anywhere in the platform set. I've started extending the methodology to
 phone silicon. First session, iPhone 13 (A15), TinyLlama-1.1B Q4_0, llama.cpp-Metal:
 
     SISO 128/128    prefill 504.0    decode 42.80  (sd 0.37, CV 0.9%)
-    LISO 2048/128   prefill 413.0    decode 42.42  (sd 0.08)
+    LISO 2048/128   prefill 402.6    decode 42.42  (sd 0.08)
     SILO 128/1024   prefill 406.9    decode 40.53 -> 30.93  (-23.7%)
 
 The SILO decline is monotonic across all five repeats (Spearman rho -1.00) while

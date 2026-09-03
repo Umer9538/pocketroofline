@@ -77,6 +77,54 @@ def summarize(run):
     return out
 
 
+def compare_chart(phone_sum, anchor_sum, metric="decode"):
+    """Phone vs mains-powered anchor on the identical long-generation regime.
+
+    Two series only, both emphasised (they are the comparison), distinguished by
+    accent vs ink and direct-labelled - identity is never colour-alone.
+    """
+    ph = next((s for s in phone_sum if s["label"] == "SILO"), None)
+    an = next((s for s in anchor_sum if s["label"] == "SILO"), None)
+    if not ph or not an:
+        return ""
+    W, H = 720, 260
+    ml, mr, mt, mb = 54, 150, 18, 40
+    pw, ph_ = W - ml - mr, H - mt - mb
+    a, b = ph[metric]["all"], an[metric]["all"]
+    n = max(len(a), len(b))
+    vals = a + b
+    lo, hi = min(vals), max(vals)
+    pad = (hi - lo) * 0.15 or 1
+    lo, hi = lo - pad, hi + pad
+    X = lambda i: ml + pw * i / max(1, n - 1)
+    Y = lambda v: mt + ph_ - (v - lo) / (hi - lo) * ph_
+    parts = []
+    for k in range(5):
+        v = lo + (hi - lo) * k / 4
+        y = Y(v)
+        parts.append(f'<line x1="{ml}" y1="{y:.1f}" x2="{ml+pw}" y2="{y:.1f}" class="grid"/>')
+        parts.append(f'<text x="{ml-10}" y="{y+4:.1f}" class="ax" text-anchor="end">{v:.0f}</text>')
+    for i in range(n):
+        parts.append(f'<text x="{X(i):.1f}" y="{mt+ph_+22}" class="ax" text-anchor="middle">{i}</text>')
+    parts.append(f'<text x="{ml+pw/2:.1f}" y="{H-4}" class="axt" text-anchor="middle">consecutive long generations</text>')
+    labels = []
+    for vals_, cls, name in ((b, "anchor", an["run"]["device"]["soc"]), (a, "emph", ph["run"]["device"]["soc"])):
+        pts = " ".join(f"{X(i):.1f},{Y(x):.1f}" for i, x in enumerate(vals_))
+        parts.append(f'<polyline points="{pts}" class="ln {cls}"/>')
+        for i, x in enumerate(vals_):
+            parts.append(f'<circle cx="{X(i):.1f}" cy="{Y(x):.1f}" r="4.5" class="pt {cls}">'
+                         f"<title>{name} repeat {i}: {x:.2f} tok/s</title></circle>")
+        labels.append({"y": Y(vals_[-1]), "cls": cls, "text": f"{name} · {vals_[-1]:.1f}"})
+    labels.sort(key=lambda l: l["y"])
+    for i in range(1, len(labels)):
+        if labels[i]["y"] - labels[i - 1]["y"] < 15:
+            labels[i]["y"] = labels[i - 1]["y"] + 15
+    for l in labels:
+        parts.append(f'<text x="{X(n-1)+10:.1f}" y="{l["y"]+4:.1f}" class="dl {l["cls"]}">{l["text"]}</text>')
+    return (f'<svg viewBox="0 0 {W} {H}" role="img" aria-label="Decode throughput over five consecutive long '
+            f'generations. The mains-powered anchor holds flat; the phone declines.">{"".join(parts)}</svg>')
+
+
 def line_chart(summaries, metric="decode"):
     """Emphasis line chart: the throttling series in accent, the rest as context."""
     W, H = 720, 300
@@ -152,8 +200,13 @@ def main():
         print("no run records found")
         return
     phone = [r for r in runs if r["device"]["soc"] != "Apple M1"]
+    anchor = [r for r in runs if r["device"]["soc"] == "Apple M1"]
     summaries = [summarize(r) for r in phone]
     summaries.sort(key=lambda s: REGIME_ORDER.index(s["label"]) if s["label"] in REGIME_ORDER else 99)
+    anchor_sum = sorted(
+        [summarize(r) for r in anchor],
+        key=lambda s: REGIME_ORDER.index(s["label"]) if s["label"] in REGIME_ORDER else 99,
+    )
 
     # Headline: peak (best stable regime decode) vs sustained (last repeat of the throttling regime)
     thr = min(summaries, key=lambda s: s["decode"]["rho"])
@@ -193,6 +246,24 @@ def main():
             )
 
     chart = line_chart(summaries, "decode")
+    cmp_chart = compare_chart(summaries, anchor_sum, "decode")
+    cmp_block = ""
+    if cmp_chart:
+        a_silo = next(s for s in anchor_sum if s["label"] == "SILO")
+        p_silo = next(s for s in summaries if s["label"] == "SILO")
+        a_dev = a_silo["run"]["device"]
+        cmp_block = f"""
+  <h2>The same workload, plugged in</h2>
+  <figure>
+    {cmp_chart}
+    <figcaption>Identical model, quantisation, regime, backend and commit, measured the same day on a
+    {html.escape(a_dev['model'])} ({html.escape(a_dev['soc'])}). The mains-powered, actively cooled machine holds decode
+    flat across all five long generations (rho {a_silo['decode']['rho']:+.2f}, {a_silo['decode']['mean']:.2f} tok/s
+    mean); the phone falls {abs(p_silo['decode']['first_last_pct']):.1f}% over the same workload. Thermal behaviour,
+    not raw silicon speed, is what phone benchmarks have to capture — and it is exactly what a laptop, a Jetson or a
+    Raspberry Pi cannot show you.</figcaption>
+  </figure>
+"""
 
     doc = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -228,12 +299,15 @@ def main():
   .ln {{ fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }}
   .ln.emph {{ stroke: var(--accent); }}
   .ln.ctx {{ stroke: var(--gray); }}
+  .ln.anchor {{ stroke: var(--ink2); stroke-dasharray: 6 3; }}
   .pt {{ stroke: var(--card); stroke-width: 2; }}
   .pt.emph {{ fill: var(--accent); }}
   .pt.ctx {{ fill: var(--gray); }}
+  .pt.anchor {{ fill: var(--ink2); }}
   .dl {{ font: 600 12px ui-monospace, Menlo, monospace; }}
   .dl.emph {{ fill: var(--accent); }}
   .dl.ctx {{ fill: var(--ink2); }}
+  .dl.anchor {{ fill: var(--ink2); }}
   figcaption {{ color: var(--ink2); font-size: 13px; padding: 8px 12px 10px; }}
   table {{ border-collapse: collapse; width: 100%; font-size: 13.5px; margin-top: 6px; }}
   th, td {{ text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--rule); }}
@@ -275,6 +349,8 @@ def main():
     ({stable['label']} CV {stable['decode']['cv']:.1f}%). The decline is thermal, not measurement noise.
     Dashed rings mark repeats flagged for a mid-run thermal transition.</figcaption>
   </figure>
+
+  {cmp_block}
 
   <h2>Per regime</h2>
   <div class="scroll"><table>
