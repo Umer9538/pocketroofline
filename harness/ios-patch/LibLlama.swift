@@ -38,11 +38,17 @@ actor LlamaContext {
 
     var n_decode: Int32 = 0
 
+    /// PocketRoofline: batch allocation capacity, in tokens. Must be >= the
+    /// largest regime prefill in matrix v1 (LISO, 2048).
+    static let batchCapacity = 2048
+
     init(model: OpaquePointer, context: OpaquePointer) {
         self.model = model
         self.context = context
         self.tokens_list = []
-        self.batch = llama_batch_init(512, 0, 1)
+        // PocketRoofline: sized for the largest matrix regime prefill (2048),
+        // not the demo's 512 — adding more tokens than allocated corrupts memory.
+        self.batch = llama_batch_init(Int32(Self.batchCapacity), 0, 1)
         self.temporary_invalid_cchars = []
         let sparams = llama_sampler_chain_default_params()
         self.sampling = llama_sampler_chain_init(sparams)
@@ -77,7 +83,9 @@ actor LlamaContext {
         print("Using \(n_threads) threads")
 
         var ctx_params = llama_context_default_params()
-        ctx_params.n_ctx = 2048
+        // PocketRoofline: headroom for the 2048-token LISO prefill and the
+        // 128+1024 SILO regime; 2048 exactly would leave no margin.
+        ctx_params.n_ctx = 4096
         ctx_params.n_threads       = Int32(n_threads)
         ctx_params.n_threads_batch = Int32(n_threads)
 
@@ -293,7 +301,14 @@ actor LlamaContext {
     // regime. Prefill and decode are timed separately; synthetic tokens are used
     // so the timing reflects pure compute, matching llama-bench methodology.
     // Returns (prefill tok/s, decode tok/s, ttft ms).
-    func prBenchOnce(promptTokens: Int, generateTokens: Int) -> (prefill: Double, decode: Double, ttftMs: Double) {
+    func prBenchOnce(promptTokens rawPrompt: Int, generateTokens: Int) -> (prefill: Double, decode: Double, ttftMs: Double) {
+        // Never exceed the allocated batch capacity — llama_batch_add writes
+        // into fixed C arrays and overflowing them corrupts the heap.
+        let promptTokens = min(rawPrompt, Self.batchCapacity)
+        if promptTokens != rawPrompt {
+            print("PR: clamped prefill \(rawPrompt) -> \(promptTokens) (batch capacity)")
+        }
+
         // --- prefill ---
         llama_batch_clear(&batch)
         for i in 0..<promptTokens {

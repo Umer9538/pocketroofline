@@ -274,6 +274,16 @@ class LlamaState: ObservableObject {
             \(repeatObjs.joined(separator: ",\n"))
                 ]}
             """)
+
+            // Persist after every regime: a crash in a later, heavier regime
+            // must never destroy measurements already taken.
+            let partial = "{\n  \"partial\": true,\n  \"regimes\": [\n\(regimeBlocks.joined(separator: ",\n"))\n  ]\n}"
+            let partialURL = getDocumentsDirectory().appendingPathComponent("pocketroofline-partial.json")
+            try? partial.write(to: partialURL, atomically: true, encoding: .utf8)
+            #if canImport(UIKit)
+            UIPasteboard.general.string = partial
+            #endif
+            messageLog += "  [saved partial after \(regime.label)]\n"
         }
 
         #if canImport(UIKit)
