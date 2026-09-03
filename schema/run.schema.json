@@ -55,6 +55,7 @@
         "id": { "type": "string", "examples": ["Qwen2.5-0.5B-Instruct"] },
         "params": { "type": "number", "description": "Parameter count in billions." },
         "quant": { "type": "string", "examples": ["Q4_K_M", "Q8_0", "FP16"] },
+        "tensorBytes": { "type": "integer", "description": "Total size of the model tensors as reported by the runtime (llama_model_size), excluding container metadata. Single-stream autoregressive decode reads this much per token, so it is what converts decode tok/s into achieved memory bandwidth.", "exclusiveMinimum": 0 },
         "fileSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Of the exact weights file; makes a run traceable to its inputs." },
         "config": {
           "type": "object",

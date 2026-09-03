@@ -103,6 +103,29 @@
     <tbody><tr><th>SISO</th><td>128 / 128</td><td>504.0</td><td>42.80 <span class='sd'>± 0.37</span></td><td>[42.52, 43.08]</td><td class=''>+1.4%</td><td>+0.60</td><td>fair → fair</td></tr><tr><th>LISO</th><td>2048 / 128</td><td>402.6</td><td>42.42 <span class='sd'>± 0.08</span></td><td>[42.33, 42.49]</td><td class=''>-1.9%</td><td>-0.50</td><td>fair → serious</td></tr><tr><th>SILO</th><td>128 / 1024</td><td>406.9</td><td>36.48 <span class='sd'>± 4.34</span></td><td>[33.09, 39.86]</td><td class='neg'>-23.7%</td><td>-1.00</td><td>serious → serious</td></tr></tbody>
   </table></div>
 
+  
+  <h2>Where this sits on the roofline</h2>
+  <p class="lede" style="font-size:15px">Single-stream decode reads every weight once per token, so
+  decode throughput converts directly into achieved memory bandwidth
+  (0.636 GB of weights per token). That places this workload firmly in the
+  memory-bound region — which is why decode, not prefill, is what thermal throttling destroys.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>SoC</th><th>Regime</th><th>Decode tok/s</th><th>Achieved GB/s</th>
+    <th>Final repeat GB/s</th><th>% of published peak</th></tr></thead>
+    <tbody><tr><th>A15 Bionic</th><td>SISO</td><td>42.80</td><td>27.2</td><td>27.5</td><td>64–80%</td></tr><tr><th>A15 Bionic</th><td>LISO</td><td>42.42</td><td>27.0</td><td>27.0</td><td>63–79%</td></tr><tr><th>A15 Bionic</th><td>SILO</td><td>36.48</td><td>23.2</td><td>19.7</td><td>54–68%</td></tr><tr><th>Apple M1</th><td>SISO</td><td>61.10</td><td>38.9</td><td>39.7</td><td>57%</td></tr><tr><th>Apple M1</th><td>LISO</td><td>62.32</td><td>39.6</td><td>40.8</td><td>58%</td></tr><tr><th>Apple M1</th><td>SILO</td><td>64.55</td><td>41.1</td><td>41.4</td><td>60%</td></tr></tbody>
+  </table></div>
+  <div class="note" style="margin-top:14px">
+    <p><b>The percentages are the weakest numbers on this page.</b> Peak bandwidth here is a
+    <b>published vendor figure, not a measurement</b> — and for the A15 the public figures disagree
+    (Apple M1: 68.25 GB/s, consistently reported (128-bit LPDDR4X-4266) · A15 Bionic: public sources disagree: 34.1 GB/s (64-bit LPDDR4X-4266) vs 42.7 GB/s), so its utilisation is given as a range. A STREAM-style measured ceiling
+    (METHODOLOGY §3) is owed and will replace these; until then, treat the achieved GB/s column as
+    the real result and the percentage column as an indication.</p>
+    <p style="margin-top:8px">Read the achieved column instead: the phone extracts a
+    <i>higher</i> fraction of its memory system than the laptop does — it is simply working against
+    a much smaller ceiling, and thermal throttling then takes away roughly a quarter of what it had.</p>
+  </div>
+
+
   <h2>Every repeat</h2>
   <div class="scroll"><table>
     <thead><tr><th>Run</th><th>Prefill tok/s</th><th>Decode tok/s</th><th>TTFT ms</th><th>Thermal</th></tr></thead>

@@ -27,7 +27,8 @@
     "fileSha256": "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
     "config": {
       "attention": "MHA"
-    }
+    },
+    "tensorBytes": 635990016
   },
   "regime": {
     "promptTokens": 128,

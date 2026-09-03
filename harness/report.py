@@ -24,6 +24,25 @@ ACCENT_D, GRAY_D = "#eb6834", "#9a998f"
 
 REGIME_ORDER = ["SISO", "LISO", "SILO"]
 
+# Published peak memory bandwidth, in GB/s. These are vendor/third-party figures,
+# NOT measured here - a STREAM-style ceiling is still owed (METHODOLOGY 3).
+# Public sources disagree on the A15, so it is carried as a range and every
+# derived utilisation figure is reported as a range too.
+PEAK_BW = {
+    "Apple M1": {"low": 68.25, "high": 68.25,
+                 "note": "68.25 GB/s, consistently reported (128-bit LPDDR4X-4266)"},
+    "A15 Bionic": {"low": 34.1, "high": 42.7,
+                   "note": "public sources disagree: 34.1 GB/s (64-bit LPDDR4X-4266) vs 42.7 GB/s"},
+}
+
+
+def achieved_bandwidth(decode_tok_s, tensor_bytes):
+    """Single-stream autoregressive decode reads every weight once per token, so
+    achieved bandwidth is decode rate x weight bytes. A lower bound on what the
+    memory system actually delivered, and the standard way to place a decode
+    workload on a roofline."""
+    return decode_tok_s * tensor_bytes / 1e9
+
 
 def bootstrap_ci(vals, n=20000, conf=0.95, seed=42):
     if len(vals) < 2:
@@ -245,6 +264,53 @@ def main():
                 f"<td>{r['thermalStateStart']} → {r['thermalStateEnd']}{flag}</td></tr>"
             )
 
+    # --- Roofline placement: achieved memory bandwidth vs published peak ---
+    tb = mdl.get("tensorBytes")
+    bw_block = ""
+    if tb:
+        bw_rows = []
+        for src, sums in (("phone", summaries), ("anchor", anchor_sum)):
+            for s in sums:
+                soc = s["run"]["device"]["soc"]
+                peak_spec = PEAK_BW.get(soc)
+                d = s["decode"]
+                bw_mean = achieved_bandwidth(d["mean"], tb)
+                bw_last = achieved_bandwidth(d["all"][-1], tb)
+                if peak_spec:
+                    u_hi = bw_mean / peak_spec["low"] * 100
+                    u_lo = bw_mean / peak_spec["high"] * 100
+                    util = f"{u_lo:.0f}–{u_hi:.0f}%" if peak_spec["low"] != peak_spec["high"] else f"{u_hi:.0f}%"
+                else:
+                    util = "—"
+                bw_rows.append(
+                    f"<tr><th>{html.escape(soc)}</th><td>{s['label']}</td>"
+                    f"<td>{d['mean']:.2f}</td><td>{bw_mean:.1f}</td>"
+                    f"<td>{bw_last:.1f}</td><td>{util}</td></tr>"
+                )
+        notes = " · ".join(f"{html.escape(k)}: {html.escape(v['note'])}" for k, v in PEAK_BW.items())
+        bw_block = f"""
+  <h2>Where this sits on the roofline</h2>
+  <p class="lede" style="font-size:15px">Single-stream decode reads every weight once per token, so
+  decode throughput converts directly into achieved memory bandwidth
+  ({tb/1e9:.3f} GB of weights per token). That places this workload firmly in the
+  memory-bound region — which is why decode, not prefill, is what thermal throttling destroys.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>SoC</th><th>Regime</th><th>Decode tok/s</th><th>Achieved GB/s</th>
+    <th>Final repeat GB/s</th><th>% of published peak</th></tr></thead>
+    <tbody>{''.join(bw_rows)}</tbody>
+  </table></div>
+  <div class="note" style="margin-top:14px">
+    <p><b>The percentages are the weakest numbers on this page.</b> Peak bandwidth here is a
+    <b>published vendor figure, not a measurement</b> — and for the A15 the public figures disagree
+    ({notes}), so its utilisation is given as a range. A STREAM-style measured ceiling
+    (METHODOLOGY §3) is owed and will replace these; until then, treat the achieved GB/s column as
+    the real result and the percentage column as an indication.</p>
+    <p style="margin-top:8px">Read the achieved column instead: the phone extracts a
+    <i>higher</i> fraction of its memory system than the laptop does — it is simply working against
+    a much smaller ceiling, and thermal throttling then takes away roughly a quarter of what it had.</p>
+  </div>
+"""
+
     chart = line_chart(summaries, "decode")
     cmp_chart = compare_chart(summaries, anchor_sum, "decode")
     cmp_block = ""
@@ -358,6 +424,8 @@ def main():
     <th>95% CI (decode)</th><th>First→last</th><th>rho</th><th>Thermal</th></tr></thead>
     <tbody>{''.join(rows)}</tbody>
   </table></div>
+
+  {bw_block}
 
   <h2>Every repeat</h2>
   <div class="scroll"><table>
