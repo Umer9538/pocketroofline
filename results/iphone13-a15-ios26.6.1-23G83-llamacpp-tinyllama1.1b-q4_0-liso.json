@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "runId": "iphone13-a15-ios26.6.1-23G83-llamacpp-tinyllama1.1b-q4_0-liso",
+  "capturedAt": "2026-09-03T19:00:36Z",
+  "matrixVersion": "v1",
+  "device": {
+    "model": "iPhone 13",
+    "soc": "A15 Bionic",
+    "ramGB": 4,
+    "identifier": "iPhone14,5"
+  },
+  "os": {
+    "name": "iOS",
+    "version": "26.6.1",
+    "build": "23G83"
+  },
+  "backend": {
+    "name": "llama.cpp-metal",
+    "version": "b1 (source build)",
+    "commit": "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "buildFlags": "build-xcframework.sh ios-device; GGML_METAL=ON; n_ctx=4096; batch=2048"
+  },
+  "model": {
+    "id": "TinyLlama-1.1B-1T-OpenOrca",
+    "params": 1.1,
+    "quant": "Q4_0",
+    "fileSha256": "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "config": {
+      "attention": "MHA"
+    }
+  },
+  "regime": {
+    "promptTokens": 2048,
+    "generateTokens": 128,
+    "label": "LISO"
+  },
+  "conditions": {
+    "airplaneMode": true,
+    "charging": false,
+    "cooldownSeconds": 0
+  },
+  "repeats": [
+    {
+      "index": 0,
+      "prefillTokensPerSec": 454.658,
+      "decodeTokensPerSec": 43.246,
+      "ttftMs": 4504.486,
+      "peakResidentMB": 762.7,
+      "thermalStateStart": "fair",
+      "thermalStateEnd": "serious",
+      "valid": false,
+      "invalidReason": "thermal state changed mid-run (fair -> serious); excluded from steady-state aggregates per METHODOLOGY 5, retained in full"
+    },
+    {
+      "index": 1,
+      "prefillTokensPerSec": 422.629,
+      "decodeTokensPerSec": 42.428,
+      "ttftMs": 4845.857,
+      "peakResidentMB": 758.8,
+      "thermalStateStart": "serious",
+      "thermalStateEnd": "serious"
+    },
+    {
+      "index": 2,
+      "prefillTokensPerSec": 392.716,
+      "decodeTokensPerSec": 42.302,
+      "ttftMs": 5214.967,
+      "peakResidentMB": 758.9,
+      "thermalStateStart": "serious",
+      "thermalStateEnd": "serious"
+    },
+    {
+      "index": 3,
+      "prefillTokensPerSec": 396.661,
+      "decodeTokensPerSec": 42.507,
+      "ttftMs": 5163.095,
+      "peakResidentMB": 759.1,
+      "thermalStateStart": "serious",
+      "thermalStateEnd": "serious"
+    },
+    {
+      "index": 4,
+      "prefillTokensPerSec": 398.557,
+      "decodeTokensPerSec": 42.427,
+      "ttftMs": 5138.541,
+      "peakResidentMB": 759.1,
+      "thermalStateStart": "serious",
+      "thermalStateEnd": "serious"
+    }
+  ],
+  "valid": true,
+  "notes": "FIRST PocketRoofline measurement on smartphone-class silicon (iPhone 13 / A15). Radios fully off (airplane mode, Wi-Fi and Bluetooth disabled), unplugged, app in foreground, single session run back-to-back SISO -> LISO -> SILO with one unrecorded warmup and ~3 s between repeats. PROTOCOL DEVIATION, recorded per METHODOLOGY 5: the device began at thermalState 'fair', not 'nominal' (the 10-minute ambient cooldown was not achieved before the session), and never returned to nominal. These are therefore warm-start figures. They are published as measured; the cold-start protocol run is a separate future session and will not overwrite this one. Long-prefill regime. Decode stays flat (42.58 t/s, sd 0.38) while prefill falls 12.3% across repeats (454.7 -> 398.6 t/s) as the device crosses from 'fair' into 'serious' thermal state. Repeat 0 is the transition and is flagged: its thermal state changed mid-run (fair -> serious), so it is excluded from any steady-state prefill aggregate and retained in full here, per METHODOLOGY 5."
+}
