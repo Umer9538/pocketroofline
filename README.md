@@ -20,6 +20,39 @@ here as they are taken, under the methodology fixed in
 
 ---
 
+## First result: sustained generation throttles the A15 by 24%
+
+iPhone 13 (A15) · iOS 26.6.1 (23G83) · TinyLlama-1.1B Q4_0 · llama.cpp-Metal
+(`95ef7fc`) · radios off, unplugged · 5 repeats per regime.
+
+| Regime | Prefill tok/s | Decode tok/s | Thermal state |
+|---|---|---|---|
+| SISO (128 in / 128 out) | 504.0 | **42.80** (sd 0.37) | fair, stable |
+| LISO (2048 in / 128 out) | 413.0 (−12.3%) | 42.58 | fair → **serious** |
+| SILO (128 in / 1024 out) | 406.9 (−23.9%) | **40.53 → 30.93 (−23.7%)** | serious throughout |
+
+Under sustained generation, decode falls **monotonically** across all five
+repeats — Spearman rho = −1.00, a perfect rank trend. The same metric is stable
+to 0.9% CV in SISO, so the decline is thermal, not measurement noise.
+
+**Peak decode (42.80 tok/s) overstates sustained decode (30.93 tok/s) by 38%.**
+Quoted phone inference numbers are peak numbers; on a phone that is roughly the
+first minute. This is the behaviour a plugged-in desktop, laptop, Jetson or
+Raspberry Pi cannot exhibit, and it is why the phone class needs its own
+roofline data rather than an extrapolation from edge boards.
+
+Honest limits on this session, recorded in every run file: the device began at
+thermal state `fair` rather than `nominal` (the 10-minute cooldown of
+METHODOLOGY §5 was not achieved), so these are **warm-start** figures; the LISO
+repeat whose thermal state changed mid-run is flagged and excluded from
+steady-state aggregates while retained in full; and SILO's mean is explicitly
+**not** a steady-state figure, because the series is non-stationary by
+construction — the throttling curve is the result, not its average.
+
+Raw records: [`results/`](results/) — one JSON per regime, every repeat retained.
+
+---
+
 ## What this adds to the roofline picture
 
 **1. Phone SoCs.** Operational intensity, attainable throughput, and the
