@@ -39,6 +39,128 @@ and throttling takes it down to 19.7 GB/s.
 > finding and pre-empts the first critique a reviewer will make.
 
 ================================================================
+# MEDIUM ARTICLE
+================================================================
+
+**Title:** Your phone runs a language model at 42 tokens per second. For about a minute.
+
+**Subtitle:** Every on-device LLM benchmark I could find runs on desktop GPUs, laptops and single-board computers. So I measured an actual phone — and the number everyone quotes turns out to be the one you almost never get.
+
+[HEADER IMAGE: screenshot of the hero + throttling chart from umer9538.github.io/pocketroofline]
+
+---
+
+### The number that isn't the number
+
+Run a 1B-parameter model on an iPhone 13 and ask it something short. You get about **42 tokens per second**. That is a real measurement, and it is reproducible to within 1%.
+
+Now ask it for five long answers in a row — the way anyone actually uses a chat app:
+
+```
+40.5  →  40.4  →  37.5  →  33.0  →  30.9   tokens/sec
+```
+
+Every run slower than the one before. By the fifth, the phone is delivering **30.9 tok/s** — and it stays there. It got hot, throttled, and did not recover.
+
+So the honest version of the headline number is: your phone runs a language model at 42 tokens per second *for about a minute*. Peak overstates sustained by **38%**.
+
+### Why nobody had this number
+
+The current state of the art for on-device LLM benchmarking is [RooflineBench](https://arxiv.org/abs/2602.11506) (Bi et al., arXiv:2602.11506). It is a genuinely good framework — a roofline treatment of inference, operational intensity, the efficiency traps that appear as model depth grows. It evaluates across five platforms:
+
+- NVIDIA RTX 3090
+- RTX 3070 Ti Laptop
+- Apple M1 Pro
+- Jetson Orin Nano Super
+- Raspberry Pi 5
+
+**None of them is a phone.** And every one of them is either mains-powered, actively cooled, or both.
+
+That is not a criticism of the paper — its platform set is what it is, and the authors say in their own future work that they intend to extend to more edge devices. But "on-device LLM" in ordinary usage means *the phone in your pocket*, and the phone is the one device class whose defining constraint — a sealed passively-cooled box running on a battery — is absent from the entire platform list.
+
+So I started measuring phones, using their methodology.
+
+### The method, fixed before any number was taken
+
+The protocol is boring on purpose, and it was committed to the repository before the first measurement:
+
+- **Three frozen regimes**, borrowing RooflineBench's naming: SISO (128 tokens in, 128 out), LISO (2048 in, 128 out), SILO (128 in, 1024 out).
+- **Five repeats each**, one unrecorded warmup, so that run-to-run variance is measured rather than assumed.
+- **`ProcessInfo.thermalState` recorded at the start and end of every single repeat.** This is the field that everything else turns out to depend on.
+- **Airplane mode, Wi-Fi and Bluetooth off, unplugged, app in the foreground.** Active radios draw power and make heat; a charging cable changes the thermal picture entirely.
+- **Every repeat published**, never summarised away. The page's figures are generated from the committed JSON — there is no number on it that I typed by hand.
+
+Device: iPhone 13 (A15 Bionic), iOS 26.6.1 build 23G83. Model: TinyLlama-1.1B Q4_0. Runtime: llama.cpp-Metal at commit `95ef7fc`, weights pinned by SHA-256.
+
+### The finding, and the control that makes it a finding
+
+Here is the whole session:
+
+| Regime | Prefill tok/s | Decode tok/s | Thermal state |
+|---|---|---|---|
+| SISO (128/128) | 504.0 | **42.80** (sd 0.37) | fair, stable |
+| LISO (2048/128) | 402.6 | 42.42 (sd 0.08) | fair → **serious** |
+| SILO (128/1024) | 406.9 | **40.53 → 30.93** | serious throughout |
+
+The SILO decline is **monotonic across all five repeats** — Spearman rho = −1.00, a perfect rank trend. Not scattered, not noisy: every repeat strictly slower than its predecessor.
+
+The reason that is a finding rather than an anecdote is sitting in the first row. In SISO, decode is stable to a **standard deviation of 0.37 tok/s — 0.9% variation.** The same metric, the same device, the same code, measured minutes apart. So when the same measurement falls by a quarter under sustained load, it cannot be dismissed as measurement scatter. The phone is throttling.
+
+Prefill falls in step, −23.9%. The device enters `serious` thermal state partway through the second regime and never returns to `fair` for the rest of the session.
+
+### The same workload, plugged in
+
+The obvious objection is that maybe this is just what LLM inference does, everywhere. So I ran the **identical** workload — same model, same quantisation, same regimes, same llama.cpp commit, same day — on a MacBook Pro (M1):
+
+| Device | SISO decode | LISO decode | SILO, five long generations |
+|---|---|---|---|
+| iPhone 13 (A15) | 42.80 | 42.42 | **40.53 → 30.93** (rho −1.00) |
+| MacBook Pro (M1) | 61.10 | 62.32 | **64.55, flat** (rho +0.10) |
+
+The laptop does not decline at all. If anything it drifts slightly upward as caches warm. It is mains-powered and has a fan, so the workload that costs the phone a quarter of its throughput costs the laptop nothing.
+
+That is the entire argument for measuring phones directly rather than extrapolating from edge boards: **the effect only exists on the hardware nobody was testing.**
+
+### Where this sits on the roofline
+
+Single-stream autoregressive decode reads every weight exactly once per token. With 0.636 GB of quantised weights, decode throughput converts straight into achieved memory bandwidth — which is what places this workload on a roofline, firmly in the memory-bound region. That, incidentally, is *why* decode is what throttling destroys and prefill suffers less: prefill has arithmetic intensity to spare, decode is starved for bandwidth.
+
+| SoC | Achieved GB/s | Share of published peak |
+|---|---|---|
+| A15 (iPhone 13) | 27.2 | **64–80%** |
+| M1 (MacBook Pro) | 38.9 | **57%** |
+| A15, after throttling | **19.7** | 54–68% |
+
+This inverts the story you would expect. **The phone extracts a larger fraction of its memory system than the laptop does.** The A15 is not inefficient — it is efficient, working against a much smaller ceiling, and then thermal throttling takes away a quarter of what it had.
+
+I want to be precise about the weakest part of that table: the percentages depend on a *published vendor* peak-bandwidth figure, not one I measured. Public sources do not even agree on the A15 — 34.1 GB/s (64-bit LPDDR4X-4266) versus 42.7 GB/s appear in different places — which is why the utilisation is given as a range rather than a single confident number. A STREAM-style measured ceiling is owed and will replace it. Until then the achieved GB/s column is the result and the percentage column is an indication.
+
+### What I am not claiming
+
+- **This is a warm start.** The device began at thermal state `fair`, not `nominal` — I did not achieve the ten-minute ambient cooldown my own protocol calls for. These are warm-start figures and they are labelled that way in every record. A cold-start session is owed, and it will be published beside this one rather than replacing it.
+- **One repeat is flagged.** The LISO repeat whose thermal state changed mid-run is excluded from steady-state aggregates and retained in full in the data, because deleting inconvenient measurements is how benchmarks become fiction.
+- **The mean of the throttling regime is meaningless** and is marked as such. A series that declines monotonically is non-stationary; averaging it produces a number that describes no moment that actually occurred. The curve is the result, not its average.
+- **One device is one device.** This is a single iPhone 13, on one OS build, at one thermal state, with one model, one quantisation and one runtime.
+- **No ANE or peak-FLOPS claims.** llama.cpp-Metal is the GPU path. Apple does not publish the Neural Engine's peak figures, so anything I said about them would be invention.
+
+### Why it re-runs forever
+
+The matrix is pinned and versioned, and it is re-run on every iOS point release and every llama.cpp version bump. A snapshot benchmark tells you what a phone did once. Run longitudinally, the same matrix tells you what changed underneath it — and unlike a snapshot, that record cannot be reconstructed later by anyone who starts after you do.
+
+This is the same discipline behind [underfoot](https://umer9538.github.io/underfoot/), which tracks what OS updates silently change in the AI models Apple and Google ship inside the operating system, and [unswayed](https://github.com/Umer9538/unswayed), which decides with confidence intervals whether a model swap actually regressed anything.
+
+### If you have a phone
+
+The scarcest resource in this project is eligible hardware. A capture takes about ten minutes, and every device added is a column of a record nobody can backfill.
+
+- 📊 Charts, tables, and every repeat: **https://umer9538.github.io/pocketroofline/**
+- ⭐ Data, harness, and methodology (MIT): **https://github.com/Umer9538/pocketroofline**
+
+Method critiques are more welcome than praise. If the protocol is wrong, I would rather find out in a comment than in a citation.
+
+**Tags:** Machine Learning, iOS, Benchmarking, On Device AI, LLM
+
+================================================================
 # LINKEDIN (short — the format that works)
 ================================================================
 
