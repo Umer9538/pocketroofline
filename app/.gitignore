@@ -1,0 +1,6 @@
+# Per-user Xcode state. The generated project itself is committed so the app
+# can be opened without XcodeGen.
+xcuserdata/
+*.xcuserstate
+build/
+DerivedData/

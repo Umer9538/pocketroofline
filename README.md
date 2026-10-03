@@ -129,6 +129,20 @@ These are constraints of the measurement, not caveats to be buried:
   memory bandwidth, different ridge point. The calibration chapter reports it as
   a different tier of the same family, not as an exact replication.
 
+## Run it on your phone
+
+The [`app/`](app/) folder is a standalone iOS app that runs the same fixed
+benchmark (TinyLlama-1.1B Q4_0, SISO/LISO/SILO, five repeats each) on your own
+iPhone, shows decode speed live as the phone heats up, and gives you a result
+card. Build it from source with Xcode — see [`app/README.md`](app/README.md).
+
+**TestFlight: coming soon** (no public link yet).
+
+To add your phone to the benchmark, tap **Submit** at the end of a run. It opens a
+pre-filled [device capture issue](https://github.com/Umer9538/pocketroofline/issues/new?template=device-capture.yml);
+captures are checked with `harness/finalize.py --check` before they land in
+`results/`.
+
 ## Status
 
 | Phase | Deliverable | State |
@@ -152,6 +166,7 @@ METHODOLOGY.md      measurement protocol, fixed before data collection
 PRIOR_ART.md        what exists already, and what this adds
 schema/             result file schema; every published number conforms
 harness/            build + run instructions per backend
+app/                iOS app: run the benchmark on your phone, submit a capture
 results/            raw runs, one file per session, never edited after commit
 ```
 
