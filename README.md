@@ -14,6 +14,8 @@ PocketRoofline extends that methodology to the device class the phrase
 "on-device LLM" is usually about: shipping smartphones. It starts with an
 iPhone 13 (A15 Bionic).
 
+**Write-up:** [Your phone runs a language model at 42 tokens per second — for about a minute](https://medium.com/@muhammadumer9538/your-phone-runs-a-language-model-at-42-tokens-per-second-for-about-a-minute-2907d93282a7) (Medium)
+
 This repository opens with the protocol, not the results. Measurements land
 here as they are taken, under the methodology fixed in
 [`METHODOLOGY.md`](METHODOLOGY.md) before any number was collected.
