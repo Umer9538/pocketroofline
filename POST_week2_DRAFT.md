@@ -202,7 +202,7 @@ Charts and every repeat: https://umer9538.github.io/pocketroofline/
 # r/LocalLLaMA
 ================================================================
 
-**Title:** I ran a roofline benchmark on an actual iPhone — sustained decode is 38% below peak
+**Title:** I ran a roofline benchmark on an actual iPhone — sustained decode is 28% below peak
 
 RooflineBench (arXiv:2602.11506) characterises on-device LLM inference across an
 RTX 3090, a 3070 Ti laptop, an M1 Pro, a Jetson Orin Nano and a Raspberry Pi 5 —
@@ -216,7 +216,8 @@ phone silicon. First session, iPhone 13 (A15), TinyLlama-1.1B Q4_0, llama.cpp-Me
 The SILO decline is monotonic across all five repeats (Spearman rho -1.00) while
 decode in SISO is stable to 0.9% CV, so it's thermal throttling rather than
 measurement scatter. Device reached `serious` thermal state during LISO and stayed
-there. Peak (42.80) vs fifth-repeat sustained (30.93) = 38%.
+there. Fifth-repeat sustained (30.93) is 27.7% below peak (42.80) — put the other
+way, peak overstates sustained by 38%.
 
 Protocol: airplane mode, Wi-Fi and Bluetooth off, unplugged, foreground app,
 synthetic-token regimes (same approach as llama-bench), one unrecorded warmup,
@@ -258,9 +259,9 @@ Jetsons and Raspberry Pis — devices that are plugged in and thermally unlike t
 phone the phrase is usually about. PocketRoofline extends RooflineBench's
 methodology (arXiv:2602.11506) to phone silicon. First session on an iPhone 13
 (A15): decode is stable at 42.80 tok/s for short generations (0.9% CV) but falls
-monotonically to 30.93 tok/s over five consecutive long generations — a 38%
-peak-vs-sustained gap, Spearman rho -1.00, with the device pinned in `serious`
-thermal state. Every repeat is committed as JSON, the page's figures are generated
+monotonically to 30.93 tok/s over five consecutive long generations — 28% below
+peak (peak overstates sustained by 38%), Spearman rho -1.00, with the device
+pinned in `serious` thermal state. Every repeat is committed as JSON, the page's figures are generated
 from those files, and the limitations (warm start, one flagged repeat, a
 non-stationary series whose mean is meaningless) are stated on the page rather
 than buried. The matrix re-runs on every OS and runtime update, so this becomes a

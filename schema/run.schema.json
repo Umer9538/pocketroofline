@@ -11,6 +11,8 @@
     "runId": { "type": "string", "minLength": 1, "description": "Unique, stable, never reused." },
     "capturedAt": { "type": "string", "format": "date-time" },
     "matrixVersion": { "type": "string", "description": "Which pinned matrix this cell belongs to, e.g. \"v1\"." },
+    "source": { "type": "string", "description": "What produced the capture: \"app\" for the public PocketRoofline iOS app, \"harness\" for the original patched llama.swiftui harness. Absent on records captured before the app existed.", "examples": ["app", "harness"] },
+    "appVersion": { "type": "string", "description": "PocketRoofline app version (CFBundleShortVersionString, optionally with build) that produced the capture. Present only when source is \"app\".", "examples": ["1.0 (1)"] },
 
     "device": {
       "type": "object",
@@ -93,7 +95,8 @@
         "ambientTempC": { "type": "number" },
         "cooldownSeconds": { "type": "integer", "minimum": 0 },
         "batteryStartPct": { "type": "number" },
-        "batteryEndPct": { "type": "number" }
+        "batteryEndPct": { "type": "number" },
+        "lowPowerMode": { "type": "boolean", "description": "Whether iOS Low Power Mode was on at any point in the run. Low Power Mode caps CPU/GPU clocks, so a true value makes the run incomparable with unthrottled runs." }
       }
     },
 

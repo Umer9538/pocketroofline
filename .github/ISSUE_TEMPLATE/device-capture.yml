@@ -1,0 +1,34 @@
+name: Device capture
+description: Add your phone's PocketRoofline run to the public benchmark.
+title: "Device capture"
+labels: ["device-capture"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running PocketRoofline! If you tapped **Submit** in the app, the capture below is already filled in. If it's empty, the app copied the JSON to your clipboard, so paste it in.
+
+        Please don't edit the numbers. Every capture is checked before it's added to `results/`.
+  - type: textarea
+    id: capture
+    attributes:
+      label: Capture
+      description: The JSON the app produced (also saved in Files → PocketRoofline).
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything unusual about the run?
+      description: Optional. For example, was a case on, was the phone in your hand or on a desk, what was the room temperature roughly, or was it run straight after heavy use?
+      placeholder: "No case, on a wooden desk, room about 22 °C."
+    validations:
+      required: false
+  - type: checkboxes
+    id: unmodified
+    attributes:
+      label: Confirmation
+      options:
+        - label: I ran this with the unmodified PocketRoofline app (TestFlight or built from this repo without changes).
+          required: false
