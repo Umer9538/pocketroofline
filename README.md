@@ -20,6 +20,22 @@ This repository opens with the protocol, not the results. Measurements land
 here as they are taken, under the methodology fixed in
 [`METHODOLOGY.md`](METHODOLOGY.md) before any number was collected.
 
+### Related work, and what this adds
+
+- [RooflineBench](https://arxiv.org/abs/2602.11506) (Bi et al., 2026): the roofline framework this project
+  extends. Its platform set contains no phone.
+- [arXiv:2603.23640](https://arxiv.org/abs/2603.23640) (March 2026): sustained-load measurements on a Galaxy
+  S24 Ultra and an iPhone 16 Pro (MLX, Qwen 2.5 1.5B). The iPhone fell from 40.5 to 23.7 tok/s over 20
+  runs, with `ProcessInfo.thermalState` logged per run. So the thermal collapse itself is independently
+  documented: it is not unique to this project, and that corroboration is welcome.
+- Community leaderboards such as [TokForge](https://tokforge.ai/leaderboard/) and
+  [DeviceMark](https://huggingface.co/datasets/devicemark/results) collect decode speeds from real phones,
+  measured as short bursts (best-of-three or median-of-three passes).
+
+What PocketRoofline adds is the **roofline placement** on phone silicon (achieved memory bandwidth against the
+device ceiling), a **mains-powered control** run with the identical workload, a **protocol fixed before any
+measurement** with every repeat committed as JSON, and a **longitudinal record** re-run on every OS build.
+
 ---
 
 ## First result: sustained generation throttles the A15 by 24%

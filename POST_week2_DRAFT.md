@@ -64,7 +64,7 @@ Every run slower than the one before. By the fifth, the phone is delivering **30
 
 So the honest version of the headline number is: your phone runs a language model at 42 tokens per second *for about a minute*. Peak overstates sustained by **38%**.
 
-### Why nobody had this number
+### What was missing
 
 The current state of the art for on-device LLM benchmarking is [RooflineBench](https://arxiv.org/abs/2602.11506) (Bi et al., arXiv:2602.11506). It is a genuinely good framework — a roofline treatment of inference, operational intensity, the efficiency traps that appear as model depth grows. It evaluates across five platforms:
 
@@ -79,6 +79,8 @@ The current state of the art for on-device LLM benchmarking is [RooflineBench](h
 That is not a criticism of the paper — its platform set is what it is, and the authors say in their own future work that they intend to extend to more edge devices. But "on-device LLM" in ordinary usage means *the phone in your pocket*, and the phone is the one device class whose defining constraint — a sealed passively-cooled box running on a battery — is absent from the entire platform list.
 
 So I started measuring phones, using their methodology.
+
+*Correction added after publishing:* the thermal collapse itself had been measured before this post. [arXiv:2603.23640](https://arxiv.org/abs/2603.23640) (March 2026) ran an iPhone 16 Pro under sustained load with MLX and saw it fall from 40.5 to 23.7 tok/s over 20 runs, thermal state logged. What this project adds is the roofline placement, a plugged-in control, and open per-repeat data re-run on every OS build.
 
 ### The method, fixed before any number was taken
 
@@ -119,7 +121,7 @@ The obvious objection is that maybe this is just what LLM inference does, everyw
 
 The laptop does not decline at all. If anything it drifts slightly upward as caches warm. It is mains-powered and has a fan, so the workload that costs the phone a quarter of its throughput costs the laptop nothing.
 
-That is the entire argument for measuring phones directly rather than extrapolating from edge boards: **the effect only exists on the hardware nobody was testing.**
+That is the entire argument for measuring phones directly rather than extrapolating from edge boards: **the effect only exists on the hardware the roofline work was not testing.**
 
 ### Where this sits on the roofline
 
@@ -184,7 +186,7 @@ by 38%.
 That gap matters, because every "tokens per second on iPhone" number you've seen
 quoted is a peak number — the first minute, on a cool phone.
 
-Why nobody caught this: the standard benchmarks for on-device AI run on desktop
+Why the usual benchmarks miss this: the standard benchmarks for on-device AI run on desktop
 GPUs, laptops, and single-board computers. Plugged in, actively cooled, no
 thermal envelope like a phone in your hand. So I started measuring phones, using
 the same roofline methodology, publishing every repeat and every caveat.
@@ -240,6 +242,11 @@ bandwidth is 27.2 GB/s on the A15 (64-80% of published peak — sources disagree
 A15's peak, so it's a range, and a STREAM ceiling is owed) vs 38.9 GB/s on the M1
 (57%). The phone extracts a higher fraction of its memory system; it just has a much
 smaller ceiling, and throttling drops it to 19.7 GB/s.
+
+Related work, so nobody has to point it out: arXiv:2603.23640 measured an iPhone 16 Pro under
+sustained load with MLX (-41.5% over 20 runs), so the thermal effect itself is not new. What is
+new here is the roofline placement (achieved bandwidth vs the device ceiling), the plugged-in
+control, and open per-repeat data re-run on every OS build.
 
 Everything is committed JSON and the page's numbers are generated from it, not
 typed: https://github.com/Umer9538/pocketroofline
