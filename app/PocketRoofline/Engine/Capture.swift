@@ -132,7 +132,8 @@ extension Capture {
         return url
     }
 
-    private static func encoder(formatting: JSONEncoder.OutputFormatting) -> JSONEncoder {
+    /// Shared with `DiagnosticCapture`, so both files encode dates and keys the same way.
+    static func encoder(formatting: JSONEncoder.OutputFormatting) -> JSONEncoder {
         let encoder = JSONEncoder()
         encoder.outputFormatting = formatting
         encoder.dateEncodingStrategy = .iso8601

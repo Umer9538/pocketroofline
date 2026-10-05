@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		08551E8BC50E458DE96D338D /* DeviceConditions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 421BB6377BA69531764E8E3A /* DeviceConditions.swift */; };
 		154F703552727B1E5C78E2BC /* ThermalLevel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0EF39E1E4311A5161E83D1A /* ThermalLevel.swift */; };
+		1D9011E2D04CB9FBC7CC71CF /* DiagnosticRunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABDEAD58B970AD06A6EC55B /* DiagnosticRunView.swift */; };
 		2000645A14A0654D42A6105E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172C449EC271684C3F50DA47 /* RootView.swift */; };
 		244ED89F8E1763ECB797FF60 /* PocketRooflineApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A0F95E72B3D493CAF8D08F7 /* PocketRooflineApp.swift */; };
 		42AA12C32B6E0ADB5CF90CD8 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BA71F0280E4D6AA4688C8D7 /* Theme.swift */; };
@@ -22,9 +23,12 @@
 		784746A7756A3CF9304652F2 /* LlamaEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5292E11BF77AD91894CE9C /* LlamaEngine.swift */; };
 		7C07FD2F13C180BCE6CA803F /* ModelStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A9352B549AE832C85C99F84 /* ModelStore.swift */; };
 		7F64DD7B96295E4A1EDF0604 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6020E9557A193EF490AC8CC /* HomeView.swift */; };
+		8D99BC7D9739B068BBBD936F /* DiagnosticSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26094C8E9FBBA255E8AC62F7 /* DiagnosticSession.swift */; };
 		940E9072FC6548C7F8298AEF /* ConditionsRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F59662D74DB69D03370234D /* ConditionsRecorder.swift */; };
+		95E4672960DB44A31191D7CD /* DiagnosticResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7451181FCE8219B7D1EC8980 /* DiagnosticResultView.swift */; };
 		966C5CDA21B9E7A5F55FDB3A /* ProcessMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F140C2718087745E8344ECBA /* ProcessMemory.swift */; };
 		A81DB1252AA2E867CA47E45F /* Headline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03CDF2411A194A1675641892 /* Headline.swift */; };
+		AFA006761C9D7B5D5BD54141 /* DiagnosticProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = E45F6E74345FCA5B5BB94422 /* DiagnosticProtocol.swift */; };
 		AFD83F429D3F2D193754F43E /* BenchmarkSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1F61D6769F2CD0ACD3B93AF /* BenchmarkSession.swift */; };
 		B332657DD67A92E1B09B0D08 /* ModelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE7558FF97984B2DCE2F4F3B /* ModelCard.swift */; };
 		B3CC1FC14BBA4D2C8319286D /* RunView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786B59F6058E48C3FA1A8563 /* RunView.swift */; };
@@ -32,6 +36,7 @@
 		B7E565F78E2BA118DAC035E2 /* BenchmarkProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 823E2940990409F64E6FFF63 /* BenchmarkProtocol.swift */; };
 		C173708C4E07D40524A89288 /* DeviceProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B481BC4C59691A2A3A234F /* DeviceProfile.swift */; };
 		C958892A0D61F42FC00C939B /* ThermalChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79166352980237EE1EC2819E /* ThermalChip.swift */; };
+		D01F87F8AA8BA00FA2849CDD /* DiagnosticCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D484E85275EAAD718B9513 /* DiagnosticCapture.swift */; };
 		D326CE8717BB4906B30C3324 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30DC967A4CA72F58F69176C3 /* ResultView.swift */; };
 		E5B185907189FC6A371B1EEB /* ResultCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECBC23E2E03DC8175EF64B07 /* ResultCard.swift */; };
 		F9E6963362C3242B0312DCC7 /* LiveTrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03214F0D57207423616FEB12 /* LiveTrace.swift */; };
@@ -55,7 +60,10 @@
 		03214F0D57207423616FEB12 /* LiveTrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveTrace.swift; sourceTree = "<group>"; };
 		03CDF2411A194A1675641892 /* Headline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Headline.swift; sourceTree = "<group>"; };
 		172C449EC271684C3F50DA47 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		1ABDEAD58B970AD06A6EC55B /* DiagnosticRunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticRunView.swift; sourceTree = "<group>"; };
+		26094C8E9FBBA255E8AC62F7 /* DiagnosticSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticSession.swift; sourceTree = "<group>"; };
 		30DC967A4CA72F58F69176C3 /* ResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultView.swift; sourceTree = "<group>"; };
+		34D484E85275EAAD718B9513 /* DiagnosticCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticCapture.swift; sourceTree = "<group>"; };
 		3A0F95E72B3D493CAF8D08F7 /* PocketRooflineApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PocketRooflineApp.swift; sourceTree = "<group>"; };
 		421BB6377BA69531764E8E3A /* DeviceConditions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceConditions.swift; sourceTree = "<group>"; };
 		43B481BC4C59691A2A3A234F /* DeviceProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceProfile.swift; sourceTree = "<group>"; };
@@ -66,6 +74,7 @@
 		5EEE9AA6BDE0EAFAC7D0697A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5F59662D74DB69D03370234D /* ConditionsRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsRecorder.swift; sourceTree = "<group>"; };
 		6B87150E83ECB48A491EFFC7 /* Submission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Submission.swift; sourceTree = "<group>"; };
+		7451181FCE8219B7D1EC8980 /* DiagnosticResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticResultView.swift; sourceTree = "<group>"; };
 		786B59F6058E48C3FA1A8563 /* RunView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunView.swift; sourceTree = "<group>"; };
 		79166352980237EE1EC2819E /* ThermalChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalChip.swift; sourceTree = "<group>"; };
 		7B5292E11BF77AD91894CE9C /* LlamaEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaEngine.swift; sourceTree = "<group>"; };
@@ -78,6 +87,7 @@
 		D167EB4EFBC22D295F99BEE2 /* PreRunChecklist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreRunChecklist.swift; sourceTree = "<group>"; };
 		E05AD801756C4B91DAA8CCC8 /* DecodeCurveChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecodeCurveChart.swift; sourceTree = "<group>"; };
 		E1F61D6769F2CD0ACD3B93AF /* BenchmarkSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BenchmarkSession.swift; sourceTree = "<group>"; };
+		E45F6E74345FCA5B5BB94422 /* DiagnosticProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticProtocol.swift; sourceTree = "<group>"; };
 		ECBC23E2E03DC8175EF64B07 /* ResultCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultCard.swift; sourceTree = "<group>"; };
 		F140C2718087745E8344ECBA /* ProcessMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessMemory.swift; sourceTree = "<group>"; };
 		F3286D6EEF0137DC6113C3B9 /* Capture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Capture.swift; sourceTree = "<group>"; };
@@ -111,6 +121,8 @@
 			isa = PBXGroup;
 			children = (
 				E05AD801756C4B91DAA8CCC8 /* DecodeCurveChart.swift */,
+				7451181FCE8219B7D1EC8980 /* DiagnosticResultView.swift */,
+				1ABDEAD58B970AD06A6EC55B /* DiagnosticRunView.swift */,
 				03CDF2411A194A1675641892 /* Headline.swift */,
 				C6020E9557A193EF490AC8CC /* HomeView.swift */,
 				AE7558FF97984B2DCE2F4F3B /* ModelCard.swift */,
@@ -160,6 +172,9 @@
 				5F59662D74DB69D03370234D /* ConditionsRecorder.swift */,
 				421BB6377BA69531764E8E3A /* DeviceConditions.swift */,
 				43B481BC4C59691A2A3A234F /* DeviceProfile.swift */,
+				34D484E85275EAAD718B9513 /* DiagnosticCapture.swift */,
+				E45F6E74345FCA5B5BB94422 /* DiagnosticProtocol.swift */,
+				26094C8E9FBBA255E8AC62F7 /* DiagnosticSession.swift */,
 				03214F0D57207423616FEB12 /* LiveTrace.swift */,
 				7B5292E11BF77AD91894CE9C /* LlamaEngine.swift */,
 				4A9352B549AE832C85C99F84 /* ModelStore.swift */,
@@ -258,6 +273,11 @@
 				5818D5E694591238A9439E03 /* DecodeCurveChart.swift in Sources */,
 				08551E8BC50E458DE96D338D /* DeviceConditions.swift in Sources */,
 				C173708C4E07D40524A89288 /* DeviceProfile.swift in Sources */,
+				D01F87F8AA8BA00FA2849CDD /* DiagnosticCapture.swift in Sources */,
+				AFA006761C9D7B5D5BD54141 /* DiagnosticProtocol.swift in Sources */,
+				95E4672960DB44A31191D7CD /* DiagnosticResultView.swift in Sources */,
+				1D9011E2D04CB9FBC7CC71CF /* DiagnosticRunView.swift in Sources */,
+				8D99BC7D9739B068BBBD936F /* DiagnosticSession.swift in Sources */,
 				A81DB1252AA2E867CA47E45F /* Headline.swift in Sources */,
 				7F64DD7B96295E4A1EDF0604 /* HomeView.swift in Sources */,
 				F9E6963362C3242B0312DCC7 /* LiveTrace.swift in Sources */,

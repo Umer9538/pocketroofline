@@ -73,6 +73,58 @@ enum PreviewFixtures {
         return points
     }()
 
+    /// The diagnostic's shape (SILO × 5, then SISO × 3) built from the same published repeats, every
+    /// window at its repeat's measured mean. Real traces show per-window detail.
+    static let diagnosticCapture: DiagnosticCapture = {
+        let windowTokens = DiagnosticProtocol.windowTokens
+        let pause = DiagnosticProtocol.pauseBetweenRepeats.secondsValue
+        var clock = 0.0
+        let regimes = DiagnosticProtocol.sequence.compactMap { block -> DiagnosticRegimeResult? in
+            guard let source = capture.regime(block.regime.label) else { return nil }
+            let repeats = source.repeats.prefix(block.repeats).map { repeatResult in
+                let start = clock
+                clock += repeatResult.ttftMs / 1000
+                let windows = stride(from: windowTokens, through: source.generateTokens, by: windowTokens).map { tokensDone in
+                    clock += Double(windowTokens) / repeatResult.decodeTokensPerSec
+                    return DiagnosticWindow(
+                        tokensDone: tokensDone,
+                        tokensPerSec: repeatResult.decodeTokensPerSec,
+                        secondsSinceStart: clock,
+                        thermalState: repeatResult.thermalStateEnd
+                    )
+                }
+                clock += pause
+                return DiagnosticRepeat(
+                    index: repeatResult.index,
+                    startSeconds: start,
+                    prefillTokensPerSec: repeatResult.prefillTokensPerSec,
+                    decodeTokensPerSec: repeatResult.decodeTokensPerSec,
+                    ttftMs: repeatResult.ttftMs,
+                    peakResidentMB: repeatResult.peakResidentMB,
+                    thermalStateStart: repeatResult.thermalStateStart,
+                    thermalStateEnd: repeatResult.thermalStateEnd,
+                    windows: windows
+                )
+            }
+            return DiagnosticRegimeResult(
+                label: source.label,
+                promptTokens: source.promptTokens,
+                generateTokens: source.generateTokens,
+                repeats: repeats
+            )
+        }
+        return DiagnosticCapture(
+            appVersion: capture.appVersion,
+            capturedAt: capture.capturedAt,
+            device: capture.device,
+            os: capture.os,
+            backend: capture.backend,
+            model: capture.model,
+            conditions: capture.conditions,
+            regimes: regimes
+        )
+    }()
+
     private static func regime(
         _ label: RegimeLabel,
         _ prompt: Int,

@@ -49,6 +49,55 @@ its mean doesn't describe any real moment in the run.
 Leaving the app mid-run stops the run and discards it. iOS doesn't allow GPU work in the
 background, and a paused run would no longer measure sustained load.
 
+## Diagnostic run (not a benchmark)
+
+Below **Run benchmark** is a smaller button: **Diagnostic run (long test first, quiet screen)**.
+It exists to explain one observation. On the iPhone 15 Plus, decode fell from 59.17 tok/s (last
+LISO repeat) to 29.69 tok/s (first SILO repeat) within seconds, while prefill rose. The diagnostic
+is not matrix v1, and its captures never become benchmark results.
+
+- **Order:** the same unrecorded warmup, then SILO 128→1024 × 5 first, then SISO 128→128 × 3.
+  Start it with the phone cool (thermal Nominal); the checklist above the buttons applies. The
+  engine, timing method and regime definitions are the benchmark's own. There is a 3 s pause
+  before every repeat, the first one included.
+- **Quiet screen:** no chart, live number, spinner or animation. The screen says *Measuring — the
+  screen stays still on purpose*. Its text (regime, repeat, last result, thermal state) changes
+  only as each pause begins, so nothing is drawn while a repeat runs.
+- **Window trace:** for every repeat, the decode rate of each 64-token window, with tokens done,
+  seconds since the first repeat began, and the thermal state at that moment. It is built inside
+  the engine's existing progress callback from its 16-token ticks, with no UI work.
+- **Capture:** `Documents/pocketroofline-diagnostic-<unix-time>.json`, visible in Files, with
+  `"kind": "diagnostic"` and `"matrixVersion": "diag-silo-first-1"`. The result screen lists each
+  repeat's decode speed and draws the windows once. It has no Submit button.
+
+Read the capture on a Mac with `python3 harness/diagnose.py <capture>`, and keep it in
+`results/diagnostics/`. `harness/finalize.py` refuses it, so it can't become a matrix v1 record.
+
+### Starting it from a launch argument
+
+`-PocketRooflineAutoRun diagnostic` (read from the UserDefaults argument domain) starts the
+diagnostic once per launch, as soon as the model check passes. If the model isn't downloaded and
+verified, the home screen says so and nothing runs. Use it for simulator tests and scripted runs:
+
+```sh
+# Simulator: put a local copy of the pinned GGUF in the app's container first, to skip the 637 MB download
+data=$(xcrun simctl get_app_container <udid> com.umer9538.pocketroofline data)
+mkdir -p "$data/Library/Application Support/Models"
+cp tinyllama-1.1b-1t-openorca.Q4_0.gguf "$data/Library/Application Support/Models/"
+xcrun simctl launch <udid> com.umer9538.pocketroofline -PocketRooflineAutoRun diagnostic
+
+# iPhone: bundle ID first, then `--`, then the app's arguments. Without the `--`, devicectl
+# reads -PocketRooflineAutoRun as its own flags. (This form was verified on an iPhone 15 Plus.)
+xcrun devicectl device process launch --device <device> --terminate-existing \
+  com.umer9538.pocketroofline -- -PocketRooflineAutoRun diagnostic
+```
+
+In Xcode, add `-PocketRooflineAutoRun diagnostic` under *Edit Scheme › Run › Arguments Passed On
+Launch*. Each repeat and the saved path are logged under subsystem `com.umer9538.pocketroofline`,
+category `diagnostic`. In the simulator, watch them with `xcrun simctl spawn <udid> log stream
+--predicate 'subsystem == "com.umer9538.pocketroofline"'`. Simulator numbers come from llama.cpp
+on the Mac's CPU, so they check the pipeline and nothing else.
+
 ## Building
 
 Requirements: Xcode 26 or later (Swift 6), [XcodeGen](https://github.com/yonaskolb/XcodeGen),
@@ -93,12 +142,15 @@ xcodebuild -project PocketRoofline.xcodeproj -scheme PocketRoofline \
 | `Engine/BenchmarkSession.swift` | `@MainActor @Observable` state machine for the run. Publishes live points and handles interruption. |
 | `Engine/BenchmarkProtocol.swift` | The frozen matrix v1 constants |
 | `Engine/Capture.swift` | Codable capture plus the peak/sustained/drop helpers |
+| `Engine/DiagnosticProtocol.swift` | The diagnostic run, `diag-silo-first-1`: order, repeat counts, window size |
+| `Engine/DiagnosticSession.swift` | Runs the diagnostic with a still screen, builds the window trace in the progress callback, handles the launch argument |
+| `Engine/DiagnosticCapture.swift` | The diagnostic's capture: provenance, plan, and every repeat with its windows |
 | `Engine/ModelStore.swift` | Download with progress and resume, then streamed SHA-256 verification |
 | `Engine/DeviceProfile.swift` | Hardware identifier → name and SoC, measured RAM, OS build |
 | `Engine/DeviceConditions.swift` | Live thermal, power, battery and network state |
 | `Engine/ConditionsRecorder.swift` | Combines samples into the conditions a capture claims |
 | `Engine/Submission.swift` | Builds the pre-filled GitHub issue URL |
-| `Views/` | Home (checklist), Run (live chart), Result, the share card |
+| `Views/` | Home (checklist), Run (live chart), Result, the share card, and the diagnostic's quiet screen and result |
 
 ## Where captures go
 
@@ -106,6 +158,8 @@ Each finished run is saved as `Documents/pocketroofline-<unix-time>.json`. You c
 Files app under *On My iPhone › PocketRoofline*. It uses the same single-object, all-regimes
 shape as the harness capture, with every field filled in on the device, plus `"source": "app"`
 and `appVersion`. `harness/finalize.py` splits it into per-regime records for `results/`.
+A diagnostic run is saved as `pocketroofline-diagnostic-<unix-time>.json` instead, and never
+becomes a record (see *Diagnostic run* above).
 
 **Submit to benchmark** always copies the compact JSON to the clipboard. It then opens the
 `device-capture` issue form, pre-filled with the capture if the URL fits (under 7,500

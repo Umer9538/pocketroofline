@@ -15,6 +15,9 @@ that follow from its records plus any in SESSION_NOTES. Where results/bandwidth/
 holds Headroom probes for that phone and OS build, its roofline placement uses
 that measured ceiling (METHODOLOGY 3) instead of a published peak.
 
+Diagnostic captures (results/diagnostics/, read by harness/diagnose.py) are never
+read here: they are not matrix v1 runs.
+
 Writes docs/index.html. Run from the repo root:
     python3 harness/report.py
 """
@@ -147,10 +150,13 @@ def spearman_index_trend(vals):
 
 def load_runs():
     runs = []
+    # Top level only, so results/diagnostics/ and the other subfolders are never read as runs.
     for p in sorted(RESULTS.glob("*.json")):
         d = json.loads(p.read_text())
         if "regime" not in d:  # skip anything that is not a run record
             continue
+        if d.get("kind") == "diagnostic" or str(d.get("matrixVersion", "")).startswith("diag-"):
+            continue  # a diagnostic is never a matrix v1 run, wherever it was put
         runs.append(d)
     return runs
 

@@ -18,6 +18,16 @@ a new run with a note, so the record stays auditable.
   here. Today that is four probes of the iPhone 15 Plus, taken 2026-10-05 01:05Z just before its run, at
   thermal state `fair` on battery. Three earlier pilot probes of that phone, taken while it was charging at
   thermal state `serious`, stay in the Headroom repository (`Calibration/runs/pilot/`) and are not used.
+- `diagnostics/`: captures from the app's diagnostic run (`"kind": "diagnostic"`, `"matrixVersion":
+  "diag-silo-first-1"`), byte-for-byte as exported. The folder appears with the first one. They are not
+  matrix v1 runs: `harness/finalize.py` refuses them, `harness/report.py` and `harness/validate.py` never
+  read them, and no figure on the results page comes from them. The run goes SILO first from a cool phone,
+  then SISO, with a still screen, and records the decode rate of every 64-token window. It exists to
+  explain the iPhone 15 Plus SILO step (README, caveat 3). Read one with
+  `python3 harness/diagnose.py results/diagnostics/<file>.json`. It prints the window rates, the steps
+  between repeats and the thermal transitions, then says which explanation the data are consistent with:
+  a state change (H1), slow decode at long context (H2), or the app's live chart (H3). For full speed it
+  reads, and never writes, that phone's matrix v1 SISO record here.
 
 ## Errata
 

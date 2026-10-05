@@ -24,7 +24,8 @@ The capture is split into one run record PER regime, each validated against
 schema/run.schema.json before anything is written. A capture that records
 charging, a network connection, or Low Power Mode is written with
 `"valid": false` and the reason (METHODOLOGY.md §7). Simulator captures are
-refused.
+refused, and so are diagnostic captures (`"kind": "diagnostic"`), which are not
+matrix v1 runs: they stay in results/diagnostics/ for harness/diagnose.py.
 
   --check         validate and print what would be written; write nothing
   --outdir DIR    write somewhere other than results/ (e.g. for tests)
@@ -87,7 +88,15 @@ def session_invalid_reason(conditions):
     return "; ".join(reasons) or None
 
 
+def is_diagnostic(cap):
+    """The app's diagnostic run (kind "diagnostic", matrixVersion "diag-..."). It is not matrix v1."""
+    return cap.get("kind") == "diagnostic" or str(cap.get("matrixVersion", "")).startswith("diag-")
+
+
 def build_records(cap, a):
+    if is_diagnostic(cap):
+        die(f"this is a diagnostic capture ({cap.get('matrixVersion', 'diag-?')}), not a matrix v1 run, so it is "
+            "never turned into run records. Keep it in results/diagnostics/ and read it with harness/diagnose.py")
     if cap.get("partial"):
         die("this is a partial capture (the run did not finish); only complete captures can be finalized")
     for key in ("device", "os", "backend", "model", "regimes", "capturedAt"):
