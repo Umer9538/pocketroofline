@@ -12,7 +12,7 @@ Laptop, Apple M1 Pro, Jetson Orin Nano Super, and Raspberry Pi 5.
 
 PocketRoofline extends that methodology to the device class the phrase
 "on-device LLM" is usually about: shipping smartphones. It starts with an
-iPhone 13 (A15 Bionic).
+iPhone 13 (A15 Bionic); an iPhone 15 Plus (A16 Bionic) is the second phone.
 
 **Write-up:** [Your phone runs a language model at 42 tokens per second — for about a minute](https://medium.com/@muhammadumer9538/your-phone-runs-a-language-model-at-42-tokens-per-second-for-about-a-minute-2907d93282a7) (Medium)
 
@@ -86,6 +86,43 @@ its throughput. Thermal behaviour, not raw silicon speed, is the thing phone
 benchmarks have to capture — and it is precisely what a plugged-in laptop, a
 Jetson or a Raspberry Pi cannot show.
 
+## Second phone: iPhone 15 Plus (A16), with three open caveats
+
+iPhone 15 Plus (A16 Bionic, 6 GB) · iOS 27.0 (24A437) · TinyLlama-1.1B Q4_0 · llama.cpp-Metal
+(`95ef7fc`) · captured 2026-10-05 with the PocketRoofline app 1.0 (1) · radios off, unplugged ·
+5 repeats per regime.
+
+| Regime | Prefill tok/s | Decode tok/s | Thermal state |
+|---|---|---|---|
+| SISO (128 in / 128 out) | 607.1 | **65.16** (sd 0.52) | fair, stable |
+| LISO (2048 in / 128 out) | 500.4 (−21.9%) | 63.91 → 59.17, monotonic (rho −1.00) | fair → **serious** |
+| SILO (128 in / 1024 out) | 461.8 (+0.5%) | 29.69, 30.89, 31.73, 28.00, 27.16 | serious throughout |
+
+**Roofline placement against a measured ceiling.** SISO decode reads weights at 41.4 GB/s, which is
+**91% of this phone's measured ceiling** of 45.3 GB/s. The ceiling is the median of four
+[Headroom](https://github.com/Umer9538/headroom) probes (a Metal STREAM triad over three 128 MiB
+buffers) taken on the same phone just before the run, at thermal state `fair`, on battery. It is the
+measured ceiling METHODOLOGY §3 asks for, and the A16 is the first chip here to have one. The A15 does
+not have one yet: its placement on the results page still rests on published figures that disagree.
+The ceiling was measured at `fair`, so SISO, also at `fair`, is the like-for-like row. No published A16
+figure is used.
+
+Three caveats, recorded in every run file and shown beside every figure on the page:
+
+1. **Warm start.** The phone was at thermal state `fair` when the run began. The 10-minute cooldown of
+   METHODOLOGY §5 was not achieved, the same deviation as the iPhone 13 session.
+2. **App capture.** The app redraws a live decode chart while each repeat runs; the iPhone 13 harness
+   drew nothing during a repeat. GPU contention from that drawing is a possible confound, so the gap
+   between the two phones is not yet a clean silicon comparison.
+3. **An unexplained step.** Decode fell from 59.17 tok/s (last LISO repeat) to 29.69 tok/s (first SILO
+   repeat) seconds later, with the thermal state already `serious` on both sides, while prefill rose
+   from 429 to 465 tok/s (2048- vs 128-token prompts). A plain thermal slowdown would have pulled
+   prefill down too. The step is unexplained, and a cold-start run with SILO first is owed.
+
+Until that run exists, no peak-to-sustained percentage is quoted for this phone, and its SILO numbers
+are not a sustained-throughput figure. Raw capture: [`results/captures/`](results/captures/); probe
+reports: [`results/bandwidth/`](results/bandwidth/).
+
 ---
 
 ## What this adds to the roofline picture
@@ -138,9 +175,10 @@ These are constraints of the measurement, not caveats to be buried:
 - **The ANE ceiling is empirical, not a roofline.** Apple does not publish the
   ANE's peak FLOPS or bandwidth. Core ML ANE numbers here are measured ceilings,
   labelled as measured ceilings.
-- **One device is one device.** Results from a single iPhone 13 describe that
-  unit, at that thermal state, on that OS build. Cross-device generalization
-  waits for the community submission ledger (Phase 3).
+- **One device is one device.** Results from one iPhone 13 and one iPhone 15
+  Plus describe those two units, each at its own thermal state, on its own OS
+  build. Two phones are not a trend. Cross-device generalization waits for the
+  community submission ledger (Phase 3).
 - **The M1 anchor is a base M1, not the M1 Pro RooflineBench used.** Different
   memory bandwidth, different ridge point. The calibration chapter reports it as
   a different tier of the same family, not as an exact replication.
@@ -165,15 +203,17 @@ captures are checked with `harness/finalize.py --check` before they land in
 |---|---|---|
 | 0 | Protocol, schema, priority stake | **done** |
 | 1 | M1 anchor + A15 first numbers, one model across both | **done** (warm start; cold-start session owed) |
-| 2 | Full matrix (models × quants × backends); bandwidth microbenchmark; preprint | not started |
+| 2 | Full matrix (models × quants × backends); bandwidth microbenchmark; preprint | **started**: measured bandwidth ceiling for the A16 (Headroom probe); A15 ceiling, full matrix and preprint not started |
 | 3 | Community submission ledger | not started |
 
 Published so far: one model (TinyLlama-1.1B Q4_0), one backend
-(llama.cpp-Metal), two devices, three regimes, five repeats each — the A15
-session warm-start. Not yet measured: other models and quantisations, MLC and
-Core ML backends, the STREAM-style bandwidth ceiling that fixes the ridge point,
-energy per token, and any device beyond these two. This section is the current
-truth and will be kept current.
+(llama.cpp-Metal), three devices (two phones and the M1 control), three
+regimes, five repeats each. Both phone sessions are warm-start, and the second
+(iPhone 15 Plus, captured with the app) carries an unexplained SILO step. The
+STREAM-style bandwidth ceiling of METHODOLOGY §3 is measured for the A16 only.
+Not yet measured: other models and quantisations, MLC and Core ML backends, the
+A15's bandwidth ceiling, cold-start sessions, energy per token, and any device
+beyond these three. This section is the current truth and will be kept current.
 
 ## Layout
 
@@ -184,6 +224,8 @@ schema/             result file schema; every published number conforms
 harness/            build + run instructions per backend
 app/                iOS app: run the benchmark on your phone, submit a capture
 results/            raw runs, one file per session, never edited after commit
+  captures/         device captures as exported, from which the run records were finalized
+  bandwidth/        Headroom probe reports: measured bandwidth ceilings (METHODOLOGY §3)
 ```
 
 ## Citing the work this builds on

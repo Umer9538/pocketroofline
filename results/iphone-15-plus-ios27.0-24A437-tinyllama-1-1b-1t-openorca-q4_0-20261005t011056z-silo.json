@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "runId": "iphone-15-plus-ios27.0-24A437-tinyllama-1-1b-1t-openorca-q4_0-20261005t011056z-silo",
+  "capturedAt": "2026-10-05T01:10:56Z",
+  "matrixVersion": "v1",
+  "source": "app",
+  "appVersion": "1.0 (1)",
+  "device": {
+    "identifier": "iPhone15,5",
+    "model": "iPhone 15 Plus",
+    "ramGB": 6,
+    "soc": "A16 Bionic"
+  },
+  "os": {
+    "build": "24A437",
+    "name": "iOS",
+    "version": "27.0"
+  },
+  "backend": {
+    "buildFlags": "build-xcframework.sh; GGML_METAL=ON; n_ctx=4096; batch=2048",
+    "commit": "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "name": "llama.cpp-metal",
+    "version": "b1 (source build)"
+  },
+  "model": {
+    "fileSha256": "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "id": "TinyLlama-1.1B-1T-OpenOrca",
+    "params": 1.100048384,
+    "quant": "Q4_0",
+    "tensorBytes": 635990016
+  },
+  "regime": {
+    "promptTokens": 128,
+    "generateTokens": 1024,
+    "label": "SILO"
+  },
+  "conditions": {
+    "airplaneMode": true,
+    "batteryEndPct": 60,
+    "batteryStartPct": 60,
+    "charging": false,
+    "lowPowerMode": false
+  },
+  "repeats": [
+    {
+      "decodeTokensPerSec": 29.685715855002776,
+      "index": 0,
+      "peakResidentMB": 853.890625,
+      "prefillTokensPerSec": 465.01630225452215,
+      "thermalStateEnd": "serious",
+      "thermalStateStart": "serious",
+      "ttftMs": 275.25916700000005
+    },
+    {
+      "decodeTokensPerSec": 30.892155767043384,
+      "index": 1,
+      "peakResidentMB": 854.75,
+      "prefillTokensPerSec": 459.22687132743624,
+      "thermalStateEnd": "serious",
+      "thermalStateStart": "serious",
+      "ttftMs": 278.729334
+    },
+    {
+      "decodeTokensPerSec": 31.72867787079085,
+      "index": 2,
+      "peakResidentMB": 854.53125,
+      "prefillTokensPerSec": 466.89789663409476,
+      "thermalStateEnd": "serious",
+      "thermalStateStart": "serious",
+      "ttftMs": 274.149875
+    },
+    {
+      "decodeTokensPerSec": 27.995347231358622,
+      "index": 3,
+      "peakResidentMB": 851.984375,
+      "prefillTokensPerSec": 450.2306762145726,
+      "thermalStateEnd": "serious",
+      "thermalStateStart": "serious",
+      "ttftMs": 284.298709
+    },
+    {
+      "decodeTokensPerSec": 27.16451626196613,
+      "index": 4,
+      "peakResidentMB": 854.140625,
+      "prefillTokensPerSec": 467.49565870017784,
+      "thermalStateEnd": "serious",
+      "thermalStateStart": "serious",
+      "ttftMs": 273.799334
+    }
+  ],
+  "valid": true,
+  "notes": "Second phone (iPhone 15 Plus / A16), captured with the PocketRoofline iOS app 1.0 (1); raw capture kept unmodified in results/captures/. Single session, back-to-back SISO -> LISO -> SILO, one unrecorded warmup, ~3 s between repeats; no usable network path at any sample (airplane mode), unplugged, Low Power Mode off, battery 60% -> 60%. THREE CAVEATS apply to every figure from this session. (1) WARM START, a METHODOLOGY 5 deviation as in the iPhone 13 session: thermalState was 'fair' at the start; the 10-minute cooldown to 'nominal' was not achieved. (2) APP CAPTURE: the app redraws a live decode chart during each repeat (a new point every 16 generated tokens, inside the timed decode loop); the iPhone 13 harness drew nothing while a repeat ran, so GPU contention from the UI is a possible confound in any comparison between the two phones. (3) UNEXPLAINED SILO STEP: decode fell from 59.17 t/s (last LISO repeat) to 29.69 t/s (first SILO repeat, begun ~3 s later), thermalState 'serious' on both sides, while prefill rose 429.3 -> 465.0 t/s (2048- vs 128-token prompts). That is not a plain thermal decline, and nothing recorded here explains it. A cold-start run with SILO first is owed; until then no peak-to-sustained percentage is quoted for this device, and its SILO figures are not a sustained-throughput estimate. Bandwidth ceiling for this phone is measured, not published: Headroom Metal STREAM triad, median of four probes at 01:05:26-01:05:38Z (this capture is stamped 01:10:56Z, at the end of the run); raw reports in results/bandwidth/."
+}

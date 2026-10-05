@@ -3,9 +3,8 @@
 Build and run instructions per backend. Each backend must emit a record
 conforming to [`../schema/run.schema.json`](../schema/run.schema.json).
 
-**Nothing in here has produced a published number yet.** Steps are marked with
-what has actually been executed, so this file never overstates the state of the
-work.
+Each section says what has actually been executed and when, so this file
+never overstates the state of the work.
 
 ## Phase 0 target: llama.cpp-Metal on iPhone 13
 
@@ -24,7 +23,15 @@ Steps:
 4. Enforce the cooldown from METHODOLOGY.md §5 between repeats.
 5. Write the run record; export via the Files app or Xcode container download.
 
-Status: **not yet executed.**
+Status: **executed 2026-09-03** on an iPhone 13 (iOS 26.6.1, 23G83) with the
+modified demo in [`ios-patch/`](ios-patch/), finalized by `finalize.py` into the
+three `results/iphone13-*` records. Deviation: the session was a warm start
+(thermal state `fair`), and the repeats were ~3 s apart rather than separated
+by the §5 cooldown; both are stated in the records' notes.
+
+Since 2026-10-05 the same regimes also run in the standalone app in
+[`../app/`](../app/), first on an iPhone 15 Plus (A16). Its captures need no
+manual fill-in and are kept in `results/captures/`.
 
 ## Calibration anchor: llama.cpp-Metal on Apple M1
 
@@ -39,7 +46,9 @@ their M1 Pro figures.
 Requires: `cmake`, a llama.cpp checkout at a pinned tag, and GGUF weights whose
 SHA-256 is recorded in the run record.
 
-Status: **not yet executed.**
+Status: **executed 2026-09-03** with `llama-bench` at the same commit and on the
+same model, into the three `results/m1-*` records. This is a different timing
+harness from the phone's, which the records' notes say.
 
 ## Bandwidth microbenchmark
 
@@ -47,4 +56,9 @@ STREAM-style Metal kernels (copy / scale / add / triad) over buffers larger than
 last-level cache, establishing the empirical sustained-bandwidth ceiling used to
 place the ridge point (METHODOLOGY.md §3).
 
-Status: **not yet written.**
+Status: **written as a separate package,
+[Headroom](https://github.com/Umer9538/headroom)** (Metal copy / scale / add /
+triad plus a CPU triad). Executed on the iPhone 15 Plus (A16) on 2026-10-05:
+four probe reports in `results/bandwidth/`, median GPU triad 45.3 GB/s. **Not
+yet executed on the A15**, so the iPhone 13's roofline placement still rests on
+published peak figures.

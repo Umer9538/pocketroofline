@@ -1,0 +1,196 @@
+{
+  "appVersion" : "1.0 (1)",
+  "backend" : {
+    "buildFlags" : "build-xcframework.sh; GGML_METAL=ON; n_ctx=4096; batch=2048",
+    "commit" : "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "name" : "llama.cpp-metal",
+    "version" : "b1 (source build)"
+  },
+  "capturedAt" : "2026-10-05T01:10:56Z",
+  "conditions" : {
+    "airplaneMode" : true,
+    "batteryEndPct" : 60,
+    "batteryStartPct" : 60,
+    "charging" : false,
+    "lowPowerMode" : false
+  },
+  "device" : {
+    "identifier" : "iPhone15,5",
+    "model" : "iPhone 15 Plus",
+    "ramGB" : 6,
+    "soc" : "A16 Bionic"
+  },
+  "matrixVersion" : "v1",
+  "model" : {
+    "fileSha256" : "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "id" : "TinyLlama-1.1B-1T-OpenOrca",
+    "params" : 1.100048384,
+    "quant" : "Q4_0",
+    "tensorBytes" : 635990016
+  },
+  "os" : {
+    "build" : "24A437",
+    "name" : "iOS",
+    "version" : "27.0"
+  },
+  "regimes" : [
+    {
+      "generateTokens" : 128,
+      "label" : "SISO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 66.06924897197591,
+          "index" : 0,
+          "peakResidentMB" : 844.859375,
+          "prefillTokensPerSec" : 652.1920521349283,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 196.26120799999998
+        },
+        {
+          "decodeTokensPerSec" : 64.91604791187544,
+          "index" : 1,
+          "peakResidentMB" : 845.78125,
+          "prefillTokensPerSec" : 595.6497788708365,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 214.89137499999998
+        },
+        {
+          "decodeTokensPerSec" : 65.09512374589382,
+          "index" : 2,
+          "peakResidentMB" : 846,
+          "prefillTokensPerSec" : 610.5609141073782,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 209.643292
+        },
+        {
+          "decodeTokensPerSec" : 64.7740908696997,
+          "index" : 3,
+          "peakResidentMB" : 846.140625,
+          "prefillTokensPerSec" : 585.8667634896932,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 218.47970899999999
+        },
+        {
+          "decodeTokensPerSec" : 64.96927390110574,
+          "index" : 4,
+          "peakResidentMB" : 846.28125,
+          "prefillTokensPerSec" : 591.1706574734949,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 216.519542
+        }
+      ]
+    },
+    {
+      "generateTokens" : 128,
+      "label" : "LISO",
+      "promptTokens" : 2048,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 63.90748991413117,
+          "index" : 0,
+          "peakResidentMB" : 852.6875,
+          "prefillTokensPerSec" : 549.3412419860384,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 3728.101667
+        },
+        {
+          "decodeTokensPerSec" : 63.33623492789473,
+          "index" : 1,
+          "peakResidentMB" : 852.515625,
+          "prefillTokensPerSec" : 534.0033406498048,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 3835.1820000000002
+        },
+        {
+          "decodeTokensPerSec" : 62.20207997924005,
+          "index" : 2,
+          "peakResidentMB" : 852.671875,
+          "prefillTokensPerSec" : 513.946707036016,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 3984.848958
+        },
+        {
+          "decodeTokensPerSec" : 61.13395243002387,
+          "index" : 3,
+          "peakResidentMB" : 852.78125,
+          "prefillTokensPerSec" : 475.2557869169906,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 4309.258417
+        },
+        {
+          "decodeTokensPerSec" : 59.17053539729493,
+          "index" : 4,
+          "peakResidentMB" : 852.859375,
+          "prefillTokensPerSec" : 429.2934281894334,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 4770.62975
+        }
+      ]
+    },
+    {
+      "generateTokens" : 1024,
+      "label" : "SILO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 29.685715855002776,
+          "index" : 0,
+          "peakResidentMB" : 853.890625,
+          "prefillTokensPerSec" : 465.01630225452215,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 275.25916700000005
+        },
+        {
+          "decodeTokensPerSec" : 30.892155767043384,
+          "index" : 1,
+          "peakResidentMB" : 854.75,
+          "prefillTokensPerSec" : 459.22687132743624,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 278.729334
+        },
+        {
+          "decodeTokensPerSec" : 31.72867787079085,
+          "index" : 2,
+          "peakResidentMB" : 854.53125,
+          "prefillTokensPerSec" : 466.89789663409476,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 274.149875
+        },
+        {
+          "decodeTokensPerSec" : 27.995347231358622,
+          "index" : 3,
+          "peakResidentMB" : 851.984375,
+          "prefillTokensPerSec" : 450.2306762145726,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 284.298709
+        },
+        {
+          "decodeTokensPerSec" : 27.16451626196613,
+          "index" : 4,
+          "peakResidentMB" : 854.140625,
+          "prefillTokensPerSec" : 467.49565870017784,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 273.799334
+        }
+      ]
+    }
+  ],
+  "schemaVersion" : 1,
+  "source" : "app"
+}
