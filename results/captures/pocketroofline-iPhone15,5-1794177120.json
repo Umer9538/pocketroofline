@@ -1,0 +1,196 @@
+{
+  "appVersion" : "1.0 (1)",
+  "backend" : {
+    "buildFlags" : "build-xcframework.sh; GGML_METAL=ON; n_ctx=4096; batch=2048",
+    "commit" : "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "name" : "llama.cpp-metal",
+    "version" : "b1 (source build)"
+  },
+  "capturedAt" : "2026-11-08T22:32:00Z",
+  "conditions" : {
+    "airplaneMode" : true,
+    "batteryEndPct" : 60,
+    "batteryStartPct" : 65,
+    "charging" : false,
+    "lowPowerMode" : false
+  },
+  "device" : {
+    "identifier" : "iPhone15,5",
+    "model" : "iPhone 15 Plus",
+    "ramGB" : 6,
+    "soc" : "A16 Bionic"
+  },
+  "matrixVersion" : "v1",
+  "model" : {
+    "fileSha256" : "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "id" : "TinyLlama-1.1B-1T-OpenOrca",
+    "params" : 1.100048384,
+    "quant" : "Q4_0",
+    "tensorBytes" : 635990016
+  },
+  "os" : {
+    "build" : "24A446",
+    "name" : "iOS",
+    "version" : "27.0.1"
+  },
+  "regimes" : [
+    {
+      "generateTokens" : 128,
+      "label" : "SISO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 65.99838149281636,
+          "index" : 0,
+          "peakResidentMB" : 837.984375,
+          "prefillTokensPerSec" : 630.07953011504,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 203.148958
+        },
+        {
+          "decodeTokensPerSec" : 63.78577016478974,
+          "index" : 1,
+          "peakResidentMB" : 838.8125,
+          "prefillTokensPerSec" : 607.6259419762703,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 210.655917
+        },
+        {
+          "decodeTokensPerSec" : 64.11991626590154,
+          "index" : 2,
+          "peakResidentMB" : 839.21875,
+          "prefillTokensPerSec" : 585.1555633779476,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 218.74525
+        },
+        {
+          "decodeTokensPerSec" : 58.77170017269302,
+          "index" : 3,
+          "peakResidentMB" : 803.984375,
+          "prefillTokensPerSec" : 507.4722473537721,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 252.230542
+        },
+        {
+          "decodeTokensPerSec" : 58.503257014577656,
+          "index" : 4,
+          "peakResidentMB" : 804.265625,
+          "prefillTokensPerSec" : 546.1543056586706,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 234.36599999999999
+        }
+      ]
+    },
+    {
+      "generateTokens" : 128,
+      "label" : "LISO",
+      "promptTokens" : 2048,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 58.785023789378315,
+          "index" : 0,
+          "peakResidentMB" : 817.59375,
+          "prefillTokensPerSec" : 552.6179799465394,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 3705.995958
+        },
+        {
+          "decodeTokensPerSec" : 58.07524459084574,
+          "index" : 1,
+          "peakResidentMB" : 817.453125,
+          "prefillTokensPerSec" : 540.1563710019587,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 3791.494667
+        },
+        {
+          "decodeTokensPerSec" : 57.827441108624335,
+          "index" : 2,
+          "peakResidentMB" : 817.328125,
+          "prefillTokensPerSec" : 524.8122189208066,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 3902.3481659999998
+        },
+        {
+          "decodeTokensPerSec" : 57.73423353632781,
+          "index" : 3,
+          "peakResidentMB" : 817.59375,
+          "prefillTokensPerSec" : 511.1796100163981,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 4006.4195829999994
+        },
+        {
+          "decodeTokensPerSec" : 57.11941969347064,
+          "index" : 4,
+          "peakResidentMB" : 816.375,
+          "prefillTokensPerSec" : 506.78069727258327,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 4041.19575
+        }
+      ]
+    },
+    {
+      "generateTokens" : 1024,
+      "label" : "SILO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 42.01252171163838,
+          "index" : 0,
+          "peakResidentMB" : 817.34375,
+          "prefillTokensPerSec" : 556.7762221754617,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 229.89487499999998
+        },
+        {
+          "decodeTokensPerSec" : 24.939913668260317,
+          "index" : 1,
+          "peakResidentMB" : 818.578125,
+          "prefillTokensPerSec" : 520.3252032520326,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 246
+        },
+        {
+          "decodeTokensPerSec" : 25.65113655651041,
+          "index" : 2,
+          "peakResidentMB" : 819.234375,
+          "prefillTokensPerSec" : 564.3187422682546,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 226.82216699999998
+        },
+        {
+          "decodeTokensPerSec" : 25.782904623471048,
+          "index" : 3,
+          "peakResidentMB" : 819.046875,
+          "prefillTokensPerSec" : 581.1086349678716,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 220.268625
+        },
+        {
+          "decodeTokensPerSec" : 25.639282799606377,
+          "index" : 4,
+          "peakResidentMB" : 820.578125,
+          "prefillTokensPerSec" : 568.5782783659395,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 225.122916
+        }
+      ]
+    }
+  ],
+  "schemaVersion" : 1,
+  "source" : "app"
+}
