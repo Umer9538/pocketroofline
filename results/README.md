@@ -43,6 +43,17 @@ a new run with a note, so the record stays auditable.
   capture with `plan.restScale` other than 1 came from the debug-only rest-scaling argument, is a
   pipeline check, and does not belong here.
 
+## Screen during repeats
+
+App records carry `uiDuringRepeats`. `"still"` means nothing on the phone's screen redrew while a
+repeat measured; the app updated its chart only in the 3 s pause between repeats. `"live"` means the
+run screen redrew a live decode chart every 16 tokens during each repeat, which competes with Metal
+decode for the GPU: on the iPhone 15 Plus, SILO decode sat at about 25–32 tok/s that way and ran
+47–56 tok/s on the diagnostic's still screen (a run that also put SILO first, on a cool phone, so the
+chart is the leading suspect, not a proven cause). Every app capture made before the field existed was live,
+including both iPhone 15 Plus captures in `captures/`; their records here predate the field and lack
+it. The measurement protocol is the same either way.
+
 ## Errata
 
 - **2026-10-04 — `model.config.attention` in the six matrix-v1 records says `MHA`.** The GGUF header of

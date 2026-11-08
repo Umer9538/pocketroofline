@@ -29,6 +29,10 @@ captures (`"kind": "recovery"`), which are not matrix v1 runs: they stay in
 results/diagnostics/ for harness/diagnose.py and results/recovery/ for
 harness/recovery.py.
 
+App records carry `uiDuringRepeats`: "still" when the capture says the screen
+did not redraw while a repeat measured, "live" for older app captures (which
+lack the key and redrew a live chart during every repeat).
+
   --check         validate and print what would be written; write nothing
   --outdir DIR    write somewhere other than results/ (e.g. for tests)
 
@@ -167,6 +171,9 @@ def build_records(cap, a):
         }
         if cap.get("source"): record["source"] = cap["source"]
         if cap.get("appVersion"): record["appVersion"] = cap["appVersion"]
+        if from_app:
+            # App captures that predate the field redrew a live chart during every repeat.
+            record["uiDuringRepeats"] = cap.get("uiDuringRepeats", "live")
         record.update({
             "device": dev,
             "os": osv,

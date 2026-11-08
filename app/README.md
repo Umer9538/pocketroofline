@@ -1,6 +1,6 @@
 # PocketRoofline for iOS
 
-Tap **Run** and watch your iPhone's LLM decode speed, live, as the phone heats up. When the run
+Tap **Run** and watch your iPhone's LLM decode speed, repeat by repeat, as the phone heats up. When the run
 finishes you get a shareable result card, and you can submit the capture to the public
 [PocketRoofline benchmark](https://github.com/Umer9538/pocketroofline) with one tap.
 
@@ -19,6 +19,21 @@ It runs the same fixed protocol as the published results (matrix v1):
   timed separately, the same way as `harness/ios-patch` (llama-bench style).
 - **Recorded per repeat:** prefill tok/s, decode tok/s, TTFT, resident memory, and the thermal
   state at the start and end.
+
+### Why the screen holds still while a repeat measures
+
+Drawing competes with Metal decode for the same GPU. On an iPhone 15 Plus, SILO decode sat at
+about 25–32 tok/s while the run screen redrew a live chart, and ran 47–56 tok/s on the diagnostic's
+still screen (which also ran SILO first, from a cool phone, so the chart is the leading suspect
+rather than a proven cause). So nothing on the run screen changes while a repeat measures. The chart, the last
+repeat's decode speed, the progress bar and the thermal chip update once per repeat, in the 3 s
+pause, and the chart then shows every 16-token window collected so far. The screen says this on
+purpose. The protocol itself (regimes, repeats, warmup, pauses, timing) is unchanged. Captures
+record it as `"uiDuringRepeats": "still"`. Captures made before this change lack the key: they
+redrew a live chart during every repeat, and `harness/finalize.py` marks their records `"live"`.
+
+To start a run from a launch argument (simulator tests, scripted runs), pass
+`-PocketRooflineAutoRun benchmark`, in the same forms as the diagnostic's argument below.
 
 ### Headline figures
 
@@ -190,7 +205,7 @@ xcodebuild -project PocketRoofline.xcodeproj -scheme PocketRoofline \
 | Path | Role |
 | --- | --- |
 | `Engine/LlamaEngine.swift` | Actor on its own serial queue that wraps llama.cpp. `benchOnce` is the measured repeat. |
-| `Engine/BenchmarkSession.swift` | `@MainActor @Observable` state machine for the run. Publishes live points and handles interruption. |
+| `Engine/BenchmarkSession.swift` | `@MainActor @Observable` state machine for the run. Collects decode windows off the main actor, publishes the run screen only between repeats, handles interruption and the `benchmark` launch argument. |
 | `Engine/BenchmarkProtocol.swift` | The frozen matrix v1 constants |
 | `Engine/Capture.swift` | Codable capture plus the peak/sustained/drop helpers |
 | `Engine/DiagnosticProtocol.swift` | The diagnostic run, `diag-silo-first-1`: order, repeat counts, window size |
@@ -204,14 +219,14 @@ xcodebuild -project PocketRoofline.xcodeproj -scheme PocketRoofline \
 | `Engine/DeviceConditions.swift` | Live thermal, power, battery and network state |
 | `Engine/ConditionsRecorder.swift` | Combines samples into the conditions a capture claims |
 | `Engine/Submission.swift` | Builds the pre-filled GitHub issue URL |
-| `Views/` | Home (checklist), Run (live chart), Result, the share card, and the quiet screens and results of the diagnostic and the recovery test |
+| `Views/` | Home (checklist), Run (chart updated between repeats), Result, the share card, and the quiet screens and results of the diagnostic and the recovery test |
 
 ## Where captures go
 
 Each finished run is saved as `Documents/pocketroofline-<unix-time>.json`. You can find it in the
 Files app under *On My iPhone › PocketRoofline*. It uses the same single-object, all-regimes
-shape as the harness capture, with every field filled in on the device, plus `"source": "app"`
-and `appVersion`. `harness/finalize.py` splits it into per-regime records for `results/`.
+shape as the harness capture, with every field filled in on the device, plus `"source": "app"`,
+`appVersion` and `uiDuringRepeats`. `harness/finalize.py` splits it into per-regime records for `results/`.
 A diagnostic run is saved as `pocketroofline-diagnostic-<unix-time>.json` instead, and a recovery
 test as `pocketroofline-recovery-<unix-time>.json`. Neither ever becomes a record (see *Diagnostic
 run* and *Recovery test* above).

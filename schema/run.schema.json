@@ -13,6 +13,7 @@
     "matrixVersion": { "type": "string", "description": "Which pinned matrix this cell belongs to, e.g. \"v1\"." },
     "source": { "type": "string", "description": "What produced the capture: \"app\" for the public PocketRoofline iOS app, \"harness\" for the original patched llama.swiftui harness. Absent on records captured before the app existed.", "examples": ["app", "harness"] },
     "appVersion": { "type": "string", "description": "PocketRoofline app version (CFBundleShortVersionString, optionally with build) that produced the capture. Present only when source is \"app\".", "examples": ["1.0 (1)"] },
+    "uiDuringRepeats": { "enum": ["live", "still"], "description": "What the app screen did while a repeat was measuring. \"still\": nothing redrew until the pause between repeats (app captures from this field's introduction on). \"live\": a live decode chart redrew during every repeat, which can compete with Metal decode for the GPU. Absent on app records finalized before the field existed, which were all live, and on harness records." },
 
     "device": {
       "type": "object",

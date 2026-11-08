@@ -72,9 +72,10 @@ enum RecoveryProtocol {
 /// Each session acts only on its own value.
 enum LaunchAutoRun {
     static let defaultsKey = "PocketRooflineAutoRun"
+    static let benchmark = "benchmark"
     static let diagnostic = "diagnostic"
     static let recovery = "recovery"
-    static let allValues = [diagnostic, recovery]
+    static let allValues = [benchmark, diagnostic, recovery]
 
     static var requested: String? { UserDefaults.standard.string(forKey: defaultsKey) }
 }

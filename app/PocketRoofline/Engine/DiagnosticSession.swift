@@ -106,7 +106,7 @@ final class DiagnosticSession {
         hasHandledLaunchArgument = true
         guard let request = LaunchAutoRun.requested else { return }
         guard request == Self.autoRunDiagnosticValue else {
-            // Another session's value (the recovery test) is its business, not an error.
+            // Another session's value (the benchmark or the recovery test) is its business, not an error.
             if !LaunchAutoRun.allValues.contains(request) {
                 Self.log.error("ignoring -\(Self.autoRunDefaultsKey, privacy: .public) \(request, privacy: .public): the values are \(LaunchAutoRun.allValues.joined(separator: ", "), privacy: .public)")
             }

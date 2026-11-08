@@ -34,7 +34,8 @@ struct PocketRooflineApp: App {
                 .preferredColorScheme(.dark)
                 .task {
                     await modelStore.refresh()
-                    // `-PocketRooflineAutoRun diagnostic|recovery` starts that run once the model is verified.
+                    // `-PocketRooflineAutoRun benchmark|diagnostic|recovery` starts that run once the model is verified.
+                    session.startIfRequestedAtLaunch()
                     diagnostic.startIfRequestedAtLaunch()
                     recovery.startIfRequestedAtLaunch()
                 }

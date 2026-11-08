@@ -15,6 +15,17 @@ struct Capture: Codable, Sendable, Hashable {
     var model: Model
     var conditions: Conditions
     var regimes: [RegimeResult]
+    /// What the screen did while repeats measured. Captures that lack the key (decoded as nil)
+    /// predate it and redrew a live chart during every repeat. `finalize.py` copies it into
+    /// each run record.
+    var uiDuringRepeats: UIDuringRepeats? = .still
+
+    enum UIDuringRepeats: String, Codable, Sendable, Hashable {
+        /// A live decode chart redrew every 16 tokens while a repeat measured.
+        case live
+        /// Nothing redrew while a repeat measured; the screen updated only in the pauses.
+        case still
+    }
 
     struct Device: Codable, Sendable, Hashable {
         var model: String
