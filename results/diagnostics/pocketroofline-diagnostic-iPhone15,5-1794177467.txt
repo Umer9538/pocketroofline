@@ -1,0 +1,48 @@
+PocketRoofline diagnostic diag-silo-first-1: not matrix v1, never a benchmark record
+iPhone 15 Plus (iPhone15,5) · A16 Bionic · iOS 27.0.1 (24A446) · llama.cpp-metal @ 95ef7fc16054 · app 1.0 (1)
+captured 2026-11-08T22:37:47Z · unplugged · network on · Low Power Mode off · battery 60% -> 60%
+plan: warmup 32/16, SILO 128/1024 x 5, SISO 128/128 x 3; 3 s pause before each repeat; 64-token windows; quiet screen
+start: thermal nominal (cold start)
+full-speed reference: this phone's matrix v1 SISO decode mean 65.16 tok/s (results/iphone-15-plus-ios27.0-24A437-tinyllama-1-1b-1t-openorca-q4_0-20261005t011056z-siso.json, OS build 24A437, not this run's)
+
+Per repeat, in run order. tok/s; t = seconds since the first repeat began; windows = each 64-token window in order.
+  SILO 1  t=   0.0  decode  56.01  prefill  597.0  thermal nominal -> nominal
+          windows 59.4 58.8 56.9 53.2 53.9 56.9 58.0 57.4 57.1 57.0 56.9 56.5 53.9 54.1 53.7 53.5
+          first->last window -9.9%  (first 3 vs last 3: -8.7%, rho -0.56)
+  SILO 2  t=  21.6  decode  55.66  prefill  598.4  thermal nominal -> fair
+          windows 58.1 58.0 57.8 57.7 57.1 56.9 56.8 56.7 56.0 56.1 55.6 55.2 52.7 52.7 52.3 52.3
+          first->last window -9.9%  (first 3 vs last 3: -9.8%, rho -0.99)
+  SILO 3  t=  43.4  decode  54.80  prefill  611.6  thermal fair -> serious
+          windows 57.6 58.0 57.7 57.1 56.4 56.3 55.9 55.6 54.9 54.7 54.4 53.9 51.6 51.9 51.3 51.1
+          first->last window -11.3%  (first 3 vs last 3: -11.1%, rho -0.99)
+  SILO 4  t=  65.4  decode  51.67  prefill  610.2  thermal serious -> serious
+          windows 57.7 57.8 57.0 56.9 55.9 55.5 55.1 54.7 54.2 54.2 53.5 51.1 44.6 42.0 42.5 44.1
+          first->last window -23.6%  (first 3 vs last 3: -26.3%, rho -0.99)
+  SILO 5  t=  88.6  decode  47.19  prefill  526.9  thermal serious -> serious
+          windows 57.7 57.8 57.3 56.7 55.9 55.2 52.1 43.8 38.8 41.9 44.2 44.4 42.6 41.9 41.0 40.2
+          first->last window -30.4%  (first 3 vs last 3: -28.9%, rho -0.87)
+  SISO 1  t= 113.6  decode  57.71  prefill  471.7  thermal serious -> serious
+          windows 57.4 58.0
+  SISO 2  t= 119.3  decode  58.63  prefill  609.9  thermal serious -> serious
+          windows 58.9 58.3
+  SISO 3  t= 124.8  decode  58.09  prefill  613.4  thermal serious -> serious
+          windows 58.1 58.0
+
+Between consecutive repeats. level = rate over tokens 1-128, the same work in every repeat; restart = next repeat's first 3 windows vs this one's last 3 (medians).
+  SILO 1  -> SILO 2  decode  56.01 ->  55.66 (-0.6%)  level 59.1 -> 58.1 (-1.8%)  restart +8.1%
+  SILO 2  -> SILO 3  decode  55.66 ->  54.80 (-1.5%)  level 58.1 -> 57.8 (-0.4%)  restart +10.1%
+  SILO 3  -> SILO 4  decode  54.80 ->  51.67 (-5.7%)  level 57.8 -> 57.8 (-0.1%)  restart +12.6%
+  SILO 4  -> SILO 5  decode  51.67 ->  47.19 (-8.7%)  level 57.8 -> 57.8 (+0.0%)  restart +35.7%
+  SILO 5  -> SISO 1  decode  47.19 ->  57.71 (+22.3%)  level 57.8 -> 57.7 (-0.1%)  restart +40.7%
+  SISO 1  -> SISO 2  decode  57.71 ->  58.63 (+1.6%)  level 57.7 -> 58.6 (+1.6%)  restart +1.6%
+  SISO 2  -> SISO 3  decode  58.63 ->  58.09 (-0.9%)  level 58.6 -> 58.1 (-0.9%)  restart -0.9%
+
+Thermal transitions:
+  t=  33.1  SILO 2 window 10 (640 tokens): nominal -> fair
+  t=  62.3  SILO 3 window 16 (1024 tokens): fair -> serious
+
+Window-to-window noise inside SILO repeats: 0.5% (median absolute deviation of the changes; a steady trend adds little)
+
+Reading. The in-repeat change compares a SILO repeat's first 3 windows with its last 3 (medians): a fall is <= -10% with rho <= -0.5, and flat is within +/-10%. A step is a change of 20% or more between neighbouring windows that holds over 3 windows each side (across a pause, only after a flat repeat), or between consecutive repeats' levels once every SILO repeat falls and restarts at least 10% faster. Above 5% noise there is no reading. Without a step, H3 also needs SILO at 80% or more of the full-speed reference.
+  Mixed: 3 of 5 SILO repeats fall by 10% or more inside and 2 stay flat, with no step of 20% or more; this run does not clearly fit H1, H2 or H3.
+  Limits: one run; network on.

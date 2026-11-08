@@ -1,0 +1,689 @@
+{
+  "appVersion" : "1.0 (1)",
+  "backend" : {
+    "buildFlags" : "build-xcframework.sh; GGML_METAL=ON; n_ctx=4096; batch=2048",
+    "commit" : "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "name" : "llama.cpp-metal",
+    "version" : "b1 (source build)"
+  },
+  "capturedAt" : "2026-11-08T22:37:47Z",
+  "conditions" : {
+    "airplaneMode" : false,
+    "batteryEndPct" : 60,
+    "batteryStartPct" : 60,
+    "charging" : false,
+    "lowPowerMode" : false
+  },
+  "device" : {
+    "identifier" : "iPhone15,5",
+    "model" : "iPhone 15 Plus",
+    "ramGB" : 6,
+    "soc" : "A16 Bionic"
+  },
+  "kind" : "diagnostic",
+  "matrixVersion" : "diag-silo-first-1",
+  "model" : {
+    "fileSha256" : "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "id" : "TinyLlama-1.1B-1T-OpenOrca",
+    "params" : 1.100048384,
+    "quant" : "Q4_0",
+    "tensorBytes" : 635990016
+  },
+  "os" : {
+    "build" : "24A446",
+    "name" : "iOS",
+    "version" : "27.0.1"
+  },
+  "plan" : {
+    "pauseSeconds" : 3,
+    "screen" : "quiet",
+    "sequence" : [
+      {
+        "generateTokens" : 1024,
+        "label" : "SILO",
+        "promptTokens" : 128,
+        "repeats" : 5
+      },
+      {
+        "generateTokens" : 128,
+        "label" : "SISO",
+        "promptTokens" : 128,
+        "repeats" : 3
+      }
+    ],
+    "warmup" : {
+      "generateTokens" : 16,
+      "promptTokens" : 32
+    },
+    "windowTokens" : 64
+  },
+  "regimes" : [
+    {
+      "generateTokens" : 1024,
+      "label" : "SILO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 56.00712043287712,
+          "index" : 0,
+          "peakResidentMB" : 814.5,
+          "prefillTokensPerSec" : 596.9544809476358,
+          "startSeconds" : 0,
+          "thermalStateEnd" : "nominal",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 214.421709,
+          "windows" : [
+            {
+              "secondsSinceStart" : 1.291555666,
+              "thermalState" : "nominal",
+              "tokensDone" : 64,
+              "tokensPerSec" : 59.435239850213904
+            },
+            {
+              "secondsSinceStart" : 2.38058375,
+              "thermalState" : "nominal",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.76798653455001
+            },
+            {
+              "secondsSinceStart" : 3.504706416,
+              "thermalState" : "nominal",
+              "tokensDone" : 192,
+              "tokensPerSec" : 56.93330319130068
+            },
+            {
+              "secondsSinceStart" : 4.708446625,
+              "thermalState" : "nominal",
+              "tokensDone" : 256,
+              "tokensPerSec" : 53.16758339210844
+            },
+            {
+              "secondsSinceStart" : 5.895017166,
+              "thermalState" : "nominal",
+              "tokensDone" : 320,
+              "tokensPerSec" : 53.937014013598095
+            },
+            {
+              "secondsSinceStart" : 7.019174916,
+              "thermalState" : "nominal",
+              "tokensDone" : 384,
+              "tokensPerSec" : 56.93150315641997
+            },
+            {
+              "secondsSinceStart" : 8.122091458,
+              "thermalState" : "nominal",
+              "tokensDone" : 448,
+              "tokensPerSec" : 58.02795400212579
+            },
+            {
+              "secondsSinceStart" : 9.23703075,
+              "thermalState" : "nominal",
+              "tokensDone" : 512,
+              "tokensPerSec" : 57.40222638642886
+            },
+            {
+              "secondsSinceStart" : 10.358541958,
+              "thermalState" : "nominal",
+              "tokensDone" : 576,
+              "tokensPerSec" : 57.065862810767925
+            },
+            {
+              "secondsSinceStart" : 11.481436958,
+              "thermalState" : "nominal",
+              "tokensDone" : 640,
+              "tokensPerSec" : 56.99552960194455
+            },
+            {
+              "secondsSinceStart" : 12.606576208,
+              "thermalState" : "nominal",
+              "tokensDone" : 704,
+              "tokensPerSec" : 56.88206516466622
+            },
+            {
+              "secondsSinceStart" : 13.740109625,
+              "thermalState" : "nominal",
+              "tokensDone" : 768,
+              "tokensPerSec" : 56.460402512984764
+            },
+            {
+              "secondsSinceStart" : 14.927491708,
+              "thermalState" : "nominal",
+              "tokensDone" : 832,
+              "tokensPerSec" : 53.900098483480726
+            },
+            {
+              "secondsSinceStart" : 16.110042875,
+              "thermalState" : "nominal",
+              "tokensDone" : 896,
+              "tokensPerSec" : 54.12027217257384
+            },
+            {
+              "secondsSinceStart" : 17.302723666,
+              "thermalState" : "nominal",
+              "tokensDone" : 960,
+              "tokensPerSec" : 53.66062027796708
+            },
+            {
+              "secondsSinceStart" : 18.498134625,
+              "thermalState" : "nominal",
+              "tokensDone" : 1024,
+              "tokensPerSec" : 53.53809607248885
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 55.662657802207285,
+          "index" : 1,
+          "peakResidentMB" : 814.53125,
+          "prefillTokensPerSec" : 598.378418794191,
+          "startSeconds" : 21.631150291,
+          "thermalStateEnd" : "fair",
+          "thermalStateStart" : "nominal",
+          "ttftMs" : 213.911458,
+          "windows" : [
+            {
+              "secondsSinceStart" : 22.947297708,
+              "thermalState" : "nominal",
+              "tokensDone" : 64,
+              "tokensPerSec" : 58.07577709246343
+            },
+            {
+              "secondsSinceStart" : 24.050161791,
+              "thermalState" : "nominal",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.03070317096029
+            },
+            {
+              "secondsSinceStart" : 25.158093625,
+              "thermalState" : "nominal",
+              "tokensDone" : 192,
+              "tokensPerSec" : 57.7652780134521
+            },
+            {
+              "secondsSinceStart" : 26.268228416,
+              "thermalState" : "nominal",
+              "tokensDone" : 256,
+              "tokensPerSec" : 57.65067854961252
+            },
+            {
+              "secondsSinceStart" : 27.389355791,
+              "thermalState" : "nominal",
+              "tokensDone" : 320,
+              "tokensPerSec" : 57.08539157277032
+            },
+            {
+              "secondsSinceStart" : 28.51415825,
+              "thermalState" : "nominal",
+              "tokensDone" : 384,
+              "tokensPerSec" : 56.89887780299208
+            },
+            {
+              "secondsSinceStart" : 29.641453041,
+              "thermalState" : "nominal",
+              "tokensDone" : 448,
+              "tokensPerSec" : 56.773063462244984
+            },
+            {
+              "secondsSinceStart" : 30.770843541,
+              "thermalState" : "nominal",
+              "tokensDone" : 512,
+              "tokensPerSec" : 56.667729399096885
+            },
+            {
+              "secondsSinceStart" : 31.914706416,
+              "thermalState" : "nominal",
+              "tokensDone" : 576,
+              "tokensPerSec" : 55.95077267781026
+            },
+            {
+              "secondsSinceStart" : 33.055569208,
+              "thermalState" : "fair",
+              "tokensDone" : 640,
+              "tokensPerSec" : 56.09789608785105
+            },
+            {
+              "secondsSinceStart" : 34.206502833,
+              "thermalState" : "fair",
+              "tokensDone" : 704,
+              "tokensPerSec" : 55.6070294670555
+            },
+            {
+              "secondsSinceStart" : 35.366175333,
+              "thermalState" : "fair",
+              "tokensDone" : 768,
+              "tokensPerSec" : 55.18798298916655
+            },
+            {
+              "secondsSinceStart" : 36.581390041,
+              "thermalState" : "fair",
+              "tokensDone" : 832,
+              "tokensPerSec" : 52.665624631749495
+            },
+            {
+              "secondsSinceStart" : 37.796241708,
+              "thermalState" : "fair",
+              "tokensDone" : 896,
+              "tokensPerSec" : 52.68129800544696
+            },
+            {
+              "secondsSinceStart" : 39.019259958,
+              "thermalState" : "fair",
+              "tokensDone" : 960,
+              "tokensPerSec" : 52.329540114600206
+            },
+            {
+              "secondsSinceStart" : 40.241816791,
+              "thermalState" : "fair",
+              "tokensDone" : 1024,
+              "tokensPerSec" : 52.34932417738201
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 54.802902905314156,
+          "index" : 2,
+          "peakResidentMB" : 814.546875,
+          "prefillTokensPerSec" : 611.5608897255381,
+          "startSeconds" : 43.361351291,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "fair",
+          "ttftMs" : 209.3005,
+          "windows" : [
+            {
+              "secondsSinceStart" : 44.681415416,
+              "thermalState" : "fair",
+              "tokensDone" : 64,
+              "tokensPerSec" : 57.62813834467337
+            },
+            {
+              "secondsSinceStart" : 45.784673541,
+              "thermalState" : "fair",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.0099615086593
+            },
+            {
+              "secondsSinceStart" : 46.894775791,
+              "thermalState" : "fair",
+              "tokensDone" : 192,
+              "tokensPerSec" : 57.652359873236875
+            },
+            {
+              "secondsSinceStart" : 48.015343875,
+              "thermalState" : "fair",
+              "tokensDone" : 256,
+              "tokensPerSec" : 57.11387312710838
+            },
+            {
+              "secondsSinceStart" : 49.149784,
+              "thermalState" : "fair",
+              "tokensDone" : 320,
+              "tokensPerSec" : 56.41549185378941
+            },
+            {
+              "secondsSinceStart" : 50.286776833,
+              "thermalState" : "fair",
+              "tokensDone" : 384,
+              "tokensPerSec" : 56.28883529456887
+            },
+            {
+              "secondsSinceStart" : 51.432378583,
+              "thermalState" : "fair",
+              "tokensDone" : 448,
+              "tokensPerSec" : 55.86584459180169
+            },
+            {
+              "secondsSinceStart" : 52.583428041,
+              "thermalState" : "fair",
+              "tokensDone" : 512,
+              "tokensPerSec" : 55.60145170629531
+            },
+            {
+              "secondsSinceStart" : 53.750103375,
+              "thermalState" : "fair",
+              "tokensDone" : 576,
+              "tokensPerSec" : 54.85673926827538
+            },
+            {
+              "secondsSinceStart" : 54.919941,
+              "thermalState" : "fair",
+              "tokensDone" : 640,
+              "tokensPerSec" : 54.7084316315983
+            },
+            {
+              "secondsSinceStart" : 56.0955355,
+              "thermalState" : "fair",
+              "tokensDone" : 704,
+              "tokensPerSec" : 54.44054439945553
+            },
+            {
+              "secondsSinceStart" : 57.282736541,
+              "thermalState" : "fair",
+              "tokensDone" : 768,
+              "tokensPerSec" : 53.90829522096881
+            },
+            {
+              "secondsSinceStart" : 58.522491958,
+              "thermalState" : "fair",
+              "tokensDone" : 832,
+              "tokensPerSec" : 51.62309083462504
+            },
+            {
+              "secondsSinceStart" : 59.755667625,
+              "thermalState" : "fair",
+              "tokensDone" : 896,
+              "tokensPerSec" : 51.89854751591832
+            },
+            {
+              "secondsSinceStart" : 61.003748166,
+              "thermalState" : "fair",
+              "tokensDone" : 960,
+              "tokensPerSec" : 51.278729957068414
+            },
+            {
+              "secondsSinceStart" : 62.255980541,
+              "thermalState" : "serious",
+              "tokensDone" : 1024,
+              "tokensPerSec" : 51.10872492815082
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 51.67015003043511,
+          "index" : 3,
+          "peakResidentMB" : 814.609375,
+          "prefillTokensPerSec" : 610.2105375570118,
+          "startSeconds" : 65.442480541,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 209.763667,
+          "windows" : [
+            {
+              "secondsSinceStart" : 66.760948541,
+              "thermalState" : "serious",
+              "tokensDone" : 64,
+              "tokensPerSec" : 57.73661638168234
+            },
+            {
+              "secondsSinceStart" : 67.868278583,
+              "thermalState" : "serious",
+              "tokensDone" : 128,
+              "tokensPerSec" : 57.79668863354743
+            },
+            {
+              "secondsSinceStart" : 68.990327666,
+              "thermalState" : "serious",
+              "tokensDone" : 192,
+              "tokensPerSec" : 57.03851993953027
+            },
+            {
+              "secondsSinceStart" : 70.114860875,
+              "thermalState" : "serious",
+              "tokensDone" : 256,
+              "tokensPerSec" : 56.91251178015631
+            },
+            {
+              "secondsSinceStart" : 71.258772791,
+              "thermalState" : "serious",
+              "tokensDone" : 320,
+              "tokensPerSec" : 55.94834132290946
+            },
+            {
+              "secondsSinceStart" : 72.412885458,
+              "thermalState" : "serious",
+              "tokensDone" : 384,
+              "tokensPerSec" : 55.453868083971415
+            },
+            {
+              "secondsSinceStart" : 73.574308208,
+              "thermalState" : "serious",
+              "tokensDone" : 448,
+              "tokensPerSec" : 55.10482131669742
+            },
+            {
+              "secondsSinceStart" : 74.744273083,
+              "thermalState" : "serious",
+              "tokensDone" : 512,
+              "tokensPerSec" : 54.70249498088155
+            },
+            {
+              "secondsSinceStart" : 75.924750583,
+              "thermalState" : "serious",
+              "tokensDone" : 576,
+              "tokensPerSec" : 54.21534929721236
+            },
+            {
+              "secondsSinceStart" : 77.105745041,
+              "thermalState" : "serious",
+              "tokensDone" : 640,
+              "tokensPerSec" : 54.19164811325273
+            },
+            {
+              "secondsSinceStart" : 78.30228025,
+              "thermalState" : "serious",
+              "tokensDone" : 704,
+              "tokensPerSec" : 53.48774576940137
+            },
+            {
+              "secondsSinceStart" : 79.555564416,
+              "thermalState" : "serious",
+              "tokensDone" : 768,
+              "tokensPerSec" : 51.06584491881379
+            },
+            {
+              "secondsSinceStart" : 80.9902525,
+              "thermalState" : "serious",
+              "tokensDone" : 832,
+              "tokensPerSec" : 44.60897877675559
+            },
+            {
+              "secondsSinceStart" : 82.515763375,
+              "thermalState" : "serious",
+              "tokensDone" : 896,
+              "tokensPerSec" : 41.953164554275226
+            },
+            {
+              "secondsSinceStart" : 84.020516291,
+              "thermalState" : "serious",
+              "tokensDone" : 960,
+              "tokensPerSec" : 42.531898420410414
+            },
+            {
+              "secondsSinceStart" : 85.47047675,
+              "thermalState" : "serious",
+              "tokensDone" : 1024,
+              "tokensPerSec" : 44.139155028472096
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 47.18535588818375,
+          "index" : 4,
+          "peakResidentMB" : 814.59375,
+          "prefillTokensPerSec" : 526.9122315874102,
+          "startSeconds" : 88.550378791,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 242.92470799999998,
+          "windows" : [
+            {
+              "secondsSinceStart" : 89.902589666,
+              "thermalState" : "serious",
+              "tokensDone" : 64,
+              "tokensPerSec" : 57.70569588191751
+            },
+            {
+              "secondsSinceStart" : 91.009832291,
+              "thermalState" : "serious",
+              "tokensDone" : 128,
+              "tokensPerSec" : 57.80124297508868
+            },
+            {
+              "secondsSinceStart" : 92.125793291,
+              "thermalState" : "serious",
+              "tokensDone" : 192,
+              "tokensPerSec" : 57.3496808299843
+            },
+            {
+              "secondsSinceStart" : 93.253832458,
+              "thermalState" : "serious",
+              "tokensDone" : 256,
+              "tokensPerSec" : 56.73560818743582
+            },
+            {
+              "secondsSinceStart" : 94.399176625,
+              "thermalState" : "serious",
+              "tokensDone" : 320,
+              "tokensPerSec" : 55.878439075093965
+            },
+            {
+              "secondsSinceStart" : 95.559537416,
+              "thermalState" : "serious",
+              "tokensDone" : 384,
+              "tokensPerSec" : 55.155245153977646
+            },
+            {
+              "secondsSinceStart" : 96.786986458,
+              "thermalState" : "serious",
+              "tokensDone" : 448,
+              "tokensPerSec" : 52.14063265529125
+            },
+            {
+              "secondsSinceStart" : 98.249297583,
+              "thermalState" : "serious",
+              "tokensDone" : 512,
+              "tokensPerSec" : 43.76634845786823
+            },
+            {
+              "secondsSinceStart" : 99.897617625,
+              "thermalState" : "serious",
+              "tokensDone" : 576,
+              "tokensPerSec" : 38.82745434137226
+            },
+            {
+              "secondsSinceStart" : 101.423558708,
+              "thermalState" : "serious",
+              "tokensDone" : 640,
+              "tokensPerSec" : 41.94128058719596
+            },
+            {
+              "secondsSinceStart" : 102.872735458,
+              "thermalState" : "serious",
+              "tokensDone" : 704,
+              "tokensPerSec" : 44.16300240140328
+            },
+            {
+              "secondsSinceStart" : 104.3127735,
+              "thermalState" : "serious",
+              "tokensDone" : 768,
+              "tokensPerSec" : 44.443261358654404
+            },
+            {
+              "secondsSinceStart" : 105.813702083,
+              "thermalState" : "serious",
+              "tokensDone" : 832,
+              "tokensPerSec" : 42.64027469605834
+            },
+            {
+              "secondsSinceStart" : 107.3414665,
+              "thermalState" : "serious",
+              "tokensDone" : 896,
+              "tokensPerSec" : 41.891275467434376
+            },
+            {
+              "secondsSinceStart" : 108.901206958,
+              "thermalState" : "serious",
+              "tokensDone" : 960,
+              "tokensPerSec" : 41.03246990705104
+            },
+            {
+              "secondsSinceStart" : 110.495153333,
+              "thermalState" : "serious",
+              "tokensDone" : 1024,
+              "tokensPerSec" : 40.151910134524314
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "generateTokens" : 128,
+      "label" : "SISO",
+      "promptTokens" : 128,
+      "repeats" : [
+        {
+          "decodeTokensPerSec" : 57.713926578298576,
+          "index" : 0,
+          "peakResidentMB" : 814.59375,
+          "prefillTokensPerSec" : 471.73505442919594,
+          "startSeconds" : 113.575484583,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 271.33875,
+          "windows" : [
+            {
+              "secondsSinceStart" : 114.961731291,
+              "thermalState" : "serious",
+              "tokensDone" : 64,
+              "tokensPerSec" : 57.415873053928124
+            },
+            {
+              "secondsSinceStart" : 116.06488475,
+              "thermalState" : "serious",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.01550487029965
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 58.62815053430437,
+          "index" : 1,
+          "peakResidentMB" : 814.59375,
+          "prefillTokensPerSec" : 609.935271858205,
+          "startSeconds" : 119.257106125,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 209.858334,
+          "windows" : [
+            {
+              "secondsSinceStart" : 120.553312333,
+              "thermalState" : "serious",
+              "tokensDone" : 64,
+              "tokensPerSec" : 58.92617859824249
+            },
+            {
+              "secondsSinceStart" : 121.65044925,
+              "thermalState" : "serious",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.33366692139551
+            }
+          ]
+        },
+        {
+          "decodeTokensPerSec" : 58.08568418308074,
+          "index" : 2,
+          "peakResidentMB" : 814.59375,
+          "prefillTokensPerSec" : 613.3734581803893,
+          "startSeconds" : 124.841733208,
+          "thermalStateEnd" : "serious",
+          "thermalStateStart" : "serious",
+          "ttftMs" : 208.68200000000002,
+          "windows" : [
+            {
+              "secondsSinceStart" : 126.151302708,
+              "thermalState" : "serious",
+              "tokensDone" : 64,
+              "tokensPerSec" : 58.14565332981663
+            },
+            {
+              "secondsSinceStart" : 127.254250291,
+              "thermalState" : "serious",
+              "tokensDone" : 128,
+              "tokensPerSec" : 58.02631209649976
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "source" : "app"
+}
