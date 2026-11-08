@@ -1,23 +1,36 @@
 import SwiftUI
 
-/// Switches between the screens based on where the sessions are. A diagnostic run, while it runs
-/// or shows its result, takes the screen; otherwise the benchmark session decides.
+/// Switches between the screens based on where the sessions are. A recovery test or a diagnostic
+/// run, while it runs or shows its result, takes the screen; otherwise the benchmark session decides.
 struct RootView: View {
     @Environment(BenchmarkSession.self) private var session
     @Environment(DiagnosticSession.self) private var diagnostic
+    @Environment(RecoverySession.self) private var recovery
 
     var body: some View {
         Group {
-            switch diagnostic.phase {
+            switch recovery.phase {
             case .running(let status):
-                DiagnosticRunView(status: status, onStop: diagnostic.stop)
+                RecoveryRunView(status: status, onStop: recovery.stop)
             case .finished(let capture, let savedTo):
-                DiagnosticResultView(capture: capture, savedTo: savedTo, onDone: diagnostic.reset)
+                RecoveryResultView(capture: capture, savedTo: savedTo, onDone: recovery.reset)
             case .idle, .failed, .interrupted:
-                benchmarkScreen
+                diagnosticOrBenchmarkScreen
             }
         }
         .animation(.smooth, value: screen)
+    }
+
+    @ViewBuilder
+    private var diagnosticOrBenchmarkScreen: some View {
+        switch diagnostic.phase {
+        case .running(let status):
+            DiagnosticRunView(status: status, onStop: diagnostic.stop)
+        case .finished(let capture, let savedTo):
+            DiagnosticResultView(capture: capture, savedTo: savedTo, onDone: diagnostic.reset)
+        case .idle, .failed, .interrupted:
+            benchmarkScreen
+        }
     }
 
     @ViewBuilder
@@ -32,9 +45,14 @@ struct RootView: View {
         }
     }
 
-    private enum Screen { case home, run, result, diagnosticRun, diagnosticResult }
+    private enum Screen { case home, run, result, diagnosticRun, diagnosticResult, recoveryRun, recoveryResult }
 
     private var screen: Screen {
+        switch recovery.phase {
+        case .running: return .recoveryRun
+        case .finished: return .recoveryResult
+        case .idle, .failed, .interrupted: break
+        }
         switch diagnostic.phase {
         case .running: return .diagnosticRun
         case .finished: return .diagnosticResult

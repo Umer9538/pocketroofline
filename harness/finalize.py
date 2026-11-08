@@ -24,8 +24,10 @@ The capture is split into one run record PER regime, each validated against
 schema/run.schema.json before anything is written. A capture that records
 charging, a network connection, or Low Power Mode is written with
 `"valid": false` and the reason (METHODOLOGY.md §7). Simulator captures are
-refused, and so are diagnostic captures (`"kind": "diagnostic"`), which are not
-matrix v1 runs: they stay in results/diagnostics/ for harness/diagnose.py.
+refused, and so are diagnostic captures (`"kind": "diagnostic"`) and recovery
+captures (`"kind": "recovery"`), which are not matrix v1 runs: they stay in
+results/diagnostics/ for harness/diagnose.py and results/recovery/ for
+harness/recovery.py.
 
   --check         validate and print what would be written; write nothing
   --outdir DIR    write somewhere other than results/ (e.g. for tests)
@@ -93,7 +95,15 @@ def is_diagnostic(cap):
     return cap.get("kind") == "diagnostic" or str(cap.get("matrixVersion", "")).startswith("diag-")
 
 
+def is_recovery(cap):
+    """The app's recovery test (kind "recovery", matrixVersion "recovery-..."). It is not matrix v1."""
+    return cap.get("kind") == "recovery" or str(cap.get("matrixVersion", "")).startswith("recovery-")
+
+
 def build_records(cap, a):
+    if is_recovery(cap):
+        die(f"this is a recovery capture ({cap.get('matrixVersion', 'recovery-?')}), not a matrix v1 run, so it is "
+            "never turned into run records. Keep it in results/recovery/ and read it with harness/recovery.py")
     if is_diagnostic(cap):
         die(f"this is a diagnostic capture ({cap.get('matrixVersion', 'diag-?')}), not a matrix v1 run, so it is "
             "never turned into run records. Keep it in results/diagnostics/ and read it with harness/diagnose.py")

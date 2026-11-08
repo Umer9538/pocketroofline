@@ -5,6 +5,7 @@ struct HomeView: View {
     @Environment(DeviceConditions.self) private var conditions
     @Environment(BenchmarkSession.self) private var session
     @Environment(DiagnosticSession.self) private var diagnostic
+    @Environment(RecoverySession.self) private var recovery
 
     var body: some View {
         ScrollView {
@@ -16,10 +17,14 @@ struct HomeView: View {
                 if let outcome = OutcomeBanner(diagnosticPhase: diagnostic.phase) {
                     outcome
                 }
+                if let outcome = OutcomeBanner(recoveryPhase: recovery.phase) {
+                    outcome
+                }
                 ModelCard()
                 PreRunChecklist()
                 runButton
                 diagnosticButton
+                recoveryButton
             }
             .padding(20)
         }
@@ -40,7 +45,8 @@ struct HomeView: View {
     private var runButton: some View {
         VStack(spacing: 10) {
             Button {
-                diagnostic.reset()  // clears a stale diagnostic banner
+                diagnostic.reset()  // clears stale diagnostic and recovery banners
+                recovery.reset()
                 session.start()
             } label: {
                 Label("Run benchmark", systemImage: "play.fill")
@@ -64,6 +70,7 @@ struct HomeView: View {
     private var diagnosticButton: some View {
         VStack(spacing: 8) {
             Button {
+                recovery.reset()  // clears a stale recovery banner
                 diagnostic.start()
             } label: {
                 Label("Diagnostic run (long test first, quiet screen)", systemImage: "stethoscope")
@@ -74,6 +81,28 @@ struct HomeView: View {
             .disabled(modelStore.verifiedFile == nil)
 
             Text("Runs the long test first, from a cool phone, on a still screen. Saved separately, never mixed with benchmark results.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 4)
+    }
+
+    /// Secondary on purpose, like the diagnostic: it measures cooling and is never a benchmark result.
+    private var recoveryButton: some View {
+        VStack(spacing: 8) {
+            Button {
+                recovery.start()
+            } label: {
+                Label("Recovery test (how fast does it cool back?)", systemImage: "thermometer.snowflake")
+                    .font(.subheadline.weight(.medium))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(modelStore.verifiedFile == nil)
+
+            Text("Heats the phone with three long tests, then rests 30 s, 1, 2 and 5 min with a short test after each, on a still screen. Takes \(RecoveryProtocol.estimatedMinutes) minutes. Saved separately, never mixed with benchmark results.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -127,6 +156,25 @@ private struct OutcomeBanner: View {
         }
     }
 
+    init?(recoveryPhase phase: RecoverySession.Phase) {
+        switch phase {
+        case .interrupted(.leftForeground):
+            title = "Recovery test stopped"
+            message = "PocketRoofline left the foreground, so the partial run was discarded. Keep the app open for the whole run."
+            systemImage = "rectangle.portrait.and.arrow.right"
+        case .interrupted(.stoppedByUser):
+            title = "Recovery test stopped"
+            message = "Nothing was saved."
+            systemImage = "stop.circle"
+        case .failed(let reason):
+            title = "Recovery test failed"
+            message = reason
+            systemImage = "exclamationmark.triangle"
+        case .idle, .running, .finished:
+            return nil
+        }
+    }
+
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 4) {
@@ -145,10 +193,12 @@ private struct OutcomeBanner: View {
     let conditions = DeviceConditions()
     let store = ModelStore()
     let session = BenchmarkSession(modelStore: store, conditions: conditions)
+    let diagnostic = DiagnosticSession(modelStore: store, conditions: conditions, benchmark: session)
     HomeView()
         .environment(store)
         .environment(conditions)
         .environment(session)
-        .environment(DiagnosticSession(modelStore: store, conditions: conditions, benchmark: session))
+        .environment(diagnostic)
+        .environment(RecoverySession(modelStore: store, conditions: conditions, benchmark: session, diagnostic: diagnostic))
 }
 #endif

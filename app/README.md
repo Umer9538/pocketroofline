@@ -98,6 +98,57 @@ category `diagnostic`. In the simulator, watch them with `xcrun simctl spawn <ud
 --predicate 'subsystem == "com.umer9538.pocketroofline"'`. Simulator numbers come from llama.cpp
 on the Mac's CPU, so they check the pipeline and nothing else.
 
+## Recovery test (not a benchmark)
+
+Under the diagnostic button is a third one: **Recovery test (how fast does it cool back?)**. It
+answers one question: once the phone is heat-soaked, how long does decode take to get back to its
+cold speed? Like the diagnostic, it is not matrix v1, and its captures never become benchmark
+results. It takes about 11 minutes, most of it resting.
+
+- **Order:** the same unrecorded warmup; a **heat phase** of SILO 128→1024 × 3 back to back,
+  recorded, with the usual 3 s pause before each repeat; then a ladder of **rests** of 30 s,
+  60 s, 120 s and 300 s, each followed by one **probe**, a recorded SISO 128→128. A rest runs from
+  the end of the previous repeat to the start of its probe. The rests are cumulative: the phone
+  keeps cooling through every rest and probe, so each probe also records its time since the heat
+  phase ended. Start it with the phone cool (thermal Nominal), so the first heat window is a cold
+  reference.
+- **Thermal state:** recorded at each rest's start, its end (the probe's start) and the probe's
+  end. During a rest it is also read once a second, and every change is kept with its time. That
+  reading draws nothing.
+- **Quiet screen:** as in the diagnostic, nothing moves while a repeat runs. During a rest the
+  screen says *Resting — the screen stays still on purpose* and shows the clock time the probe
+  will start, fixed as the rest begins. There is no countdown: a countdown would redraw once a
+  second for up to five minutes while the phone is meant to be cooling, and the clock time tells
+  the same thing without any redraw. The screen changes only as a heat repeat's pause begins and
+  as a rest begins, so the next change after a rest begins comes after its probe has finished.
+- **Window trace and capture:** every repeat has the diagnostic's 64-token window trace. The run
+  is saved to `Documents/pocketroofline-recovery-<unix-time>.json` with `"kind": "recovery"`,
+  `"matrixVersion": "recovery-ladder-1"` and the plan written in. The result screen draws probe
+  decode against rest length once, with the first heat window as a dashed cold line, and lists
+  the probes and the heat repeats. It has no Submit button.
+- The idle timer stays off for the whole run. Leaving the foreground or locking the phone stops
+  the run and discards it.
+
+Read the capture on a Mac with `python3 harness/recovery.py <capture>`, and keep it in
+`results/recovery/`. `harness/finalize.py` refuses it.
+
+Start it from a launch argument as for the diagnostic, with the value `recovery`:
+
+```sh
+# iPhone (verified form: bundle ID, then `--`, then the app's arguments)
+xcrun devicectl device process launch --device <device> --terminate-existing \
+  com.umer9538.pocketroofline -- -PocketRooflineAutoRun recovery
+
+# Simulator, with the model copied into the container as above
+xcrun simctl launch <udid> com.umer9538.pocketroofline -PocketRooflineAutoRun recovery
+```
+
+For pipeline tests only, a Debug build also reads `-PocketRooflineRecoveryScale <factor>`, a value
+between 0 and 1 that shortens every rest by that factor (`0.1` gives 3, 6, 12 and 30 s). A Release
+build ignores it. The factor goes into the capture as `plan.restScale`, the result screen flags
+it, and `harness/recovery.py` prints a "scaled rests — not a real run" banner. Never pass it for a
+real measurement. Log category: `recovery`.
+
 ## Building
 
 Requirements: Xcode 26 or later (Swift 6), [XcodeGen](https://github.com/yonaskolb/XcodeGen),
@@ -145,12 +196,15 @@ xcodebuild -project PocketRoofline.xcodeproj -scheme PocketRoofline \
 | `Engine/DiagnosticProtocol.swift` | The diagnostic run, `diag-silo-first-1`: order, repeat counts, window size |
 | `Engine/DiagnosticSession.swift` | Runs the diagnostic with a still screen, builds the window trace in the progress callback, handles the launch argument |
 | `Engine/DiagnosticCapture.swift` | The diagnostic's capture: provenance, plan, and every repeat with its windows |
+| `Engine/RecoveryProtocol.swift` | The recovery test, `recovery-ladder-1`: heat phase, rest ladder, probe, debug-only rest scale |
+| `Engine/RecoverySession.swift` | Runs the recovery test with a still screen, polls thermal state during rests, handles the launch argument |
+| `Engine/RecoveryCapture.swift` | The recovery test's capture: provenance, plan, heat repeats and one probe per rest |
 | `Engine/ModelStore.swift` | Download with progress and resume, then streamed SHA-256 verification |
 | `Engine/DeviceProfile.swift` | Hardware identifier → name and SoC, measured RAM, OS build |
 | `Engine/DeviceConditions.swift` | Live thermal, power, battery and network state |
 | `Engine/ConditionsRecorder.swift` | Combines samples into the conditions a capture claims |
 | `Engine/Submission.swift` | Builds the pre-filled GitHub issue URL |
-| `Views/` | Home (checklist), Run (live chart), Result, the share card, and the diagnostic's quiet screen and result |
+| `Views/` | Home (checklist), Run (live chart), Result, the share card, and the quiet screens and results of the diagnostic and the recovery test |
 
 ## Where captures go
 
@@ -158,8 +212,9 @@ Each finished run is saved as `Documents/pocketroofline-<unix-time>.json`. You c
 Files app under *On My iPhone › PocketRoofline*. It uses the same single-object, all-regimes
 shape as the harness capture, with every field filled in on the device, plus `"source": "app"`
 and `appVersion`. `harness/finalize.py` splits it into per-regime records for `results/`.
-A diagnostic run is saved as `pocketroofline-diagnostic-<unix-time>.json` instead, and never
-becomes a record (see *Diagnostic run* above).
+A diagnostic run is saved as `pocketroofline-diagnostic-<unix-time>.json` instead, and a recovery
+test as `pocketroofline-recovery-<unix-time>.json`. Neither ever becomes a record (see *Diagnostic
+run* and *Recovery test* above).
 
 **Submit to benchmark** always copies the compact JSON to the clipboard. It then opens the
 `device-capture` issue form, pre-filled with the capture if the URL fits (under 7,500

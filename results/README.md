@@ -28,6 +28,20 @@ a new run with a note, so the record stays auditable.
   between repeats and the thermal transitions, then says which explanation the data are consistent with:
   a state change (H1), slow decode at long context (H2), or the app's live chart (H3). For full speed it
   reads, and never writes, that phone's matrix v1 SISO record here.
+- `recovery/`: captures from the app's recovery test (`"kind": "recovery"`, `"matrixVersion":
+  "recovery-ladder-1"`), byte-for-byte as exported. The folder appears with the first one. Like the
+  diagnostics, they are not matrix v1 runs: `harness/finalize.py` refuses them, `harness/report.py`
+  and `harness/validate.py` never read them, and no figure on the results page comes from them. The
+  run heats the phone with SILO 128/1024 x 3, then rests 30, 60, 120 and 300 s with one SISO
+  128/128 probe after each, on a still screen, with a 64-token window trace for every repeat. Start
+  it on the phone with `xcrun devicectl device process launch --device <d> --terminate-existing
+  com.umer9538.pocketroofline -- -PocketRooflineAutoRun recovery` (or the home screen's third
+  button), and read it with `python3 harness/recovery.py results/recovery/<file>.json`. It prints
+  the heat phase, each probe's decode as a share of the run's cold reference (the first window of
+  the first heat repeat) and of that phone's matrix v1 SISO mean from a record here (read only),
+  the thermal transitions, and a reading against thresholds declared at the top of the script. A
+  capture with `plan.restScale` other than 1 came from the debug-only rest-scaling argument, is a
+  pipeline check, and does not belong here.
 
 ## Errata
 

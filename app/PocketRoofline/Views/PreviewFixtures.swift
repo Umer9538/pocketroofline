@@ -125,6 +125,50 @@ enum PreviewFixtures {
         )
     }()
 
+    /// The recovery test's shape (SILO × 3, then a probe after each rest) built from the diagnostic
+    /// fixture above: its SILO repeats as the heat phase, its SISO repeats as probes. The rest
+    /// timing is laid out from the ladder; none of it is a measured recovery.
+    static let recoveryCapture: RecoveryCapture = {
+        let source = diagnosticCapture
+        let heat = Array(source.regimes.first { $0.label == .silo }?.repeats.prefix(RecoveryProtocol.heatRepeats) ?? [])
+        let sisoRepeats = source.regimes.first { $0.label == .siso }?.repeats ?? []
+        let plan = RecoveryCapture.Plan(restScale: 1)
+        let heatEnd = heat.last?.windows.last?.secondsSinceStart ?? 0
+        var clock = heatEnd
+        let probes = plan.restSecondsPlanned.enumerated().compactMap { index, rest -> RecoveryProbe? in
+            guard !sisoRepeats.isEmpty else { return nil }
+            var result = sisoRepeats[index % sisoRepeats.count]
+            let restStart = clock
+            clock += rest
+            result.index = index
+            result.startSeconds = clock
+            clock += result.ttftMs / 1000 + Double(result.windows.count * RecoveryProtocol.windowTokens) / result.decodeTokensPerSec
+            return RecoveryProbe(
+                index: index,
+                restSecondsPlanned: rest,
+                restSecondsActual: rest,
+                restStartSeconds: restStart,
+                secondsSinceHeatEnd: result.startSeconds - heatEnd,
+                thermalAtRestStart: result.thermalStateStart,
+                thermalAtRestEnd: result.thermalStateStart,
+                thermalChangesDuringRest: [],
+                result: result
+            )
+        }
+        return RecoveryCapture(
+            appVersion: source.appVersion,
+            capturedAt: source.capturedAt,
+            device: source.device,
+            os: source.os,
+            backend: source.backend,
+            model: source.model,
+            conditions: source.conditions,
+            plan: plan,
+            heat: heat,
+            probes: probes
+        )
+    }()
+
     private static func regime(
         _ label: RegimeLabel,
         _ prompt: Int,

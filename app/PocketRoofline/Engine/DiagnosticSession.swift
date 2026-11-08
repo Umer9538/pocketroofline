@@ -50,8 +50,8 @@ final class DiagnosticSession {
 
     /// Launching with `-PocketRooflineAutoRun diagnostic` (UserDefaults argument domain) starts a
     /// diagnostic run as soon as the model is verified, for the simulator and scripted runs.
-    static let autoRunDefaultsKey = "PocketRooflineAutoRun"
-    static let autoRunDiagnosticValue = "diagnostic"
+    static let autoRunDefaultsKey = LaunchAutoRun.defaultsKey
+    static let autoRunDiagnosticValue = LaunchAutoRun.diagnostic
 
     private(set) var phase: Phase = .idle
 
@@ -104,9 +104,12 @@ final class DiagnosticSession {
     func startIfRequestedAtLaunch() {
         guard !hasHandledLaunchArgument else { return }
         hasHandledLaunchArgument = true
-        guard let request = UserDefaults.standard.string(forKey: Self.autoRunDefaultsKey) else { return }
+        guard let request = LaunchAutoRun.requested else { return }
         guard request == Self.autoRunDiagnosticValue else {
-            Self.log.error("ignoring -\(Self.autoRunDefaultsKey, privacy: .public) \(request, privacy: .public): the only value is \(Self.autoRunDiagnosticValue, privacy: .public)")
+            // Another session's value (the recovery test) is its business, not an error.
+            if !LaunchAutoRun.allValues.contains(request) {
+                Self.log.error("ignoring -\(Self.autoRunDefaultsKey, privacy: .public) \(request, privacy: .public): the values are \(LaunchAutoRun.allValues.joined(separator: ", "), privacy: .public)")
+            }
             return
         }
         guard modelStore.verifiedFile != nil else {
@@ -260,12 +263,13 @@ final class DiagnosticSession {
     }
 }
 
-/// Builds one repeat's window trace inside the engine's progress callback.
+/// Builds one repeat's window trace inside the engine's progress callback. The recovery test
+/// (`RecoverySession`) uses it too.
 ///
 /// It runs on the engine's queue, inside the timed decode loop, so it does as little as possible:
 /// per tick, one uncontended lock and two additions; per window, also a clock read, a thermal-state
 /// read and an append into reserved capacity. Nothing reaches the main actor or the screen.
-private final class WindowTrace: Sendable {
+final class WindowTrace: Sendable {
     private struct State: Sendable {
         var windows: [DiagnosticWindow] = []
         var pendingSeconds = 0.0
