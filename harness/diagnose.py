@@ -28,7 +28,8 @@ data: one run cannot prove a cause. With window-to-window noise above 5% there i
 run that is slow from the start isn't mistaken for one where the step went away.
 
 Diagnostic captures are not matrix v1 runs. They live in results/diagnostics/, finalize.py
-refuses them, and report.py and validate.py never read them.
+refuses them, and report.py and validate.py never read them as runs (report.py shows one, read from
+the capture, only in a labelled box on that phone's station).
 
 Usage (from the repo root):
     python3 harness/diagnose.py results/diagnostics/pocketroofline-diagnostic-<unix>.json

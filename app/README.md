@@ -22,10 +22,11 @@ It runs the same fixed protocol as the published results (matrix v1):
 
 ### Why the screen holds still while a repeat measures
 
-Drawing competes with Metal decode for the same GPU. On an iPhone 15 Plus, SILO decode sat at
-about 25–32 tok/s while the run screen redrew a live chart, and ran 47–56 tok/s on the diagnostic's
-still screen (which also ran SILO first, from a cool phone, so the chart is the leading suspect
-rather than a proven cause). So nothing on the run screen changes while a repeat measures. The chart, the last
+Drawing competes with Metal decode for the same GPU, so a benchmark should not draw while it
+measures. The live chart was first suspected of causing the iPhone 15 Plus SILO step; a later
+still-screen run showed the step too, so the chart is not its main cause (see the main README). The
+screen still holds still, so that drawing is never part of a measurement. Nothing on the run screen
+changes while a repeat measures. The chart, the last
 repeat's decode speed, the progress bar and the thermal chip update once per repeat, in the 3 s
 pause, and the chart then shows every 16-token window collected so far. The screen says this on
 purpose. The protocol itself (regimes, repeats, warmup, pauses, timing) is unchanged. Captures

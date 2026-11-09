@@ -29,6 +29,11 @@ captures (`"kind": "recovery"`), which are not matrix v1 runs: they stay in
 results/diagnostics/ for harness/diagnose.py and results/recovery/ for
 harness/recovery.py.
 
+A repeat whose thermal state changed while it ran (start != end) is written with
+`"valid": false` and the reason, so it is published in full and excluded from
+steady-state aggregates (METHODOLOGY.md §5). A repeat the capture already marks
+keeps its own flag.
+
 App records carry `uiDuringRepeats`: "still" when the capture says the screen
 did not redraw while a repeat measured, "live" for older app captures (which
 lack the key and redrew a live chart during every repeat).
@@ -92,6 +97,21 @@ def session_invalid_reason(conditions):
     if conditions.get("lowPowerMode") is True:
         reasons.append("Low Power Mode was on")
     return "; ".join(reasons) or None
+
+
+def flag_thermal_transitions(repeats):
+    """METHODOLOGY.md §5: a repeat whose thermal state changed mid-run is flagged, kept, and left out of
+    steady-state aggregates. Returns copies; repeats that already carry `valid` are left as they are."""
+    out = []
+    for r in repeats:
+        r = dict(r)
+        a, b = r.get("thermalStateStart"), r.get("thermalStateEnd")
+        if "valid" not in r and a != b:
+            r["valid"] = False
+            r["invalidReason"] = (f"thermal state changed mid-run ({a} -> {b}); excluded from steady-state "
+                                  "aggregates per METHODOLOGY 5, retained in full")
+        out.append(r)
+    return out
 
 
 def is_diagnostic(cap):
@@ -181,7 +201,7 @@ def build_records(cap, a):
             "model": mdl,
             "regime": {"promptTokens": regime["promptTokens"], "generateTokens": regime["generateTokens"], "label": label},
             "conditions": conditions,
-            "repeats": regime["repeats"],
+            "repeats": flag_thermal_transitions(regime["repeats"]),
             "valid": invalid_reason is None,
         })
         if invalid_reason:

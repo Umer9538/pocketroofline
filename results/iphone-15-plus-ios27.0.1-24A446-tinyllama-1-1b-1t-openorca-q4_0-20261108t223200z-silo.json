@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "runId": "iphone-15-plus-ios27.0.1-24A446-tinyllama-1-1b-1t-openorca-q4_0-20261108t223200z-silo",
+  "capturedAt": "2026-11-08T22:32:00Z",
+  "matrixVersion": "v1",
+  "source": "app",
+  "appVersion": "1.0 (1)",
+  "uiDuringRepeats": "live",
+  "device": {
+    "identifier": "iPhone15,5",
+    "model": "iPhone 15 Plus",
+    "ramGB": 6,
+    "soc": "A16 Bionic"
+  },
+  "os": {
+    "build": "24A446",
+    "name": "iOS",
+    "version": "27.0.1"
+  },
+  "backend": {
+    "buildFlags": "build-xcframework.sh; GGML_METAL=ON; n_ctx=4096; batch=2048",
+    "commit": "95ef7fc16054e63b427a3ef00188e055ef7586d8",
+    "name": "llama.cpp-metal",
+    "version": "b1 (source build)"
+  },
+  "model": {
+    "fileSha256": "bd07d1c53b833d422272259b17b393270b8f81c937d14332dfa044fe1b349884",
+    "id": "TinyLlama-1.1B-1T-OpenOrca",
+    "params": 1.100048384,
+    "quant": "Q4_0",
+    "tensorBytes": 635990016
+  },
+  "regime": {
+    "promptTokens": 128,
+    "generateTokens": 1024,
+    "label": "SILO"
+  },
+  "conditions": {
+    "airplaneMode": true,
+    "batteryEndPct": 60,
+    "batteryStartPct": 65,
+    "charging": false,
+    "lowPowerMode": false
+  },
+  "repeats": [
+    {
+      "decodeTokensPerSec": 42.01252171163838,
+      "index": 0,
+      "peakResidentMB": 817.34375,
+      "prefillTokensPerSec": 556.7762221754617,
+      "thermalStateEnd": "fair",
+      "thermalStateStart": "nominal",
+      "ttftMs": 229.89487499999998,
+      "valid": false,
+      "invalidReason": "thermal state changed mid-run (nominal -> fair); excluded from steady-state aggregates per METHODOLOGY 5, retained in full"
+    },
+    {
+      "decodeTokensPerSec": 24.939913668260317,
+      "index": 1,
+      "peakResidentMB": 818.578125,
+      "prefillTokensPerSec": 520.3252032520326,
+      "thermalStateEnd": "fair",
+      "thermalStateStart": "fair",
+      "ttftMs": 246
+    },
+    {
+      "decodeTokensPerSec": 25.65113655651041,
+      "index": 2,
+      "peakResidentMB": 819.234375,
+      "prefillTokensPerSec": 564.3187422682546,
+      "thermalStateEnd": "fair",
+      "thermalStateStart": "fair",
+      "ttftMs": 226.82216699999998
+    },
+    {
+      "decodeTokensPerSec": 25.782904623471048,
+      "index": 3,
+      "peakResidentMB": 819.046875,
+      "prefillTokensPerSec": 581.1086349678716,
+      "thermalStateEnd": "fair",
+      "thermalStateStart": "fair",
+      "ttftMs": 220.268625
+    },
+    {
+      "decodeTokensPerSec": 25.639282799606377,
+      "index": 4,
+      "peakResidentMB": 820.578125,
+      "prefillTokensPerSec": 568.5782783659395,
+      "thermalStateEnd": "fair",
+      "thermalStateStart": "fair",
+      "ttftMs": 225.122916
+    }
+  ],
+  "valid": true,
+  "notes": "iPhone 15 Plus (A16), PocketRoofline app 1.0 (1), iOS 27.0.1 (24A446); raw capture kept unmodified in results/captures/. Matrix v1 back-to-back SISO -> LISO -> SILO, one unrecorded warmup, 3 s pause before each repeat. COLD START (thermalState nominal at the first repeat), airplane mode, unplugged, Low Power Mode off, battery 65% -> 60%. SCREEN LIVE: the app redrew a live decode chart during every repeat (the capture predates the uiDuringRepeats field). SILO STEP: decode 57.12 t/s in the last LISO repeat, 42.01 in the first SILO repeat (nominal -> fair), then 24.94-25.78 t/s at fair; iOS never reported serious. The step also appears in the 2026-10-05 (24A437) and the still-screen 2026-11-08 sessions; its cause is unexplained (README), so no peak-to-sustained percentage is quoted for this phone and its SILO figures are not a sustained-throughput estimate. Repeats whose thermal state changed mid-run are flagged per METHODOLOGY 5. The Headroom bandwidth ceiling for this phone was probed on 24A437, not this build."
+}

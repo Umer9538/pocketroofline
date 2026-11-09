@@ -10,14 +10,16 @@ excluded from aggregates and still shown in the table and the chart.
 
 Phone records are grouped into sessions (the records finalized from one
 capture), oldest first. The first session is station 01 and carries the page
-headline. Each later session gets its own station section, with the caveats
-that follow from its records plus any in SESSION_NOTES. Where results/bandwidth/
-holds Headroom probes for that phone and OS build, its roofline placement uses
-that measured ceiling (METHODOLOGY 3) instead of a published peak.
+headline. Every other phone gets one station section, numbered in order of its
+first session, holding each of its sessions separately (never pooled), with the
+caveats that follow from the records plus any account in DEVICE_NOTES. Where
+results/bandwidth/ holds Headroom probes for that phone and a session's OS build,
+that session's roofline placement uses the measured ceiling (METHODOLOGY 3).
 
-Diagnostic captures (results/diagnostics/, read by harness/diagnose.py) and
-recovery captures (results/recovery/, read by harness/recovery.py) are never read
-here: they are not matrix v1 runs.
+Diagnostic captures (results/diagnostics/) are never read as runs: no table,
+chart or statistic comes from them. A station's DEVICE_NOTES may show one in a
+labelled "what the diagnostic showed" box, read straight from the capture.
+Recovery captures (results/recovery/) are not read here.
 
 Writes docs/index.html. Run from the repo root:
     python3 harness/report.py
@@ -28,6 +30,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
 CAPTURES = RESULTS / "captures"    # raw captures, as exported from the device
 BANDWIDTH = RESULTS / "bandwidth"  # raw Headroom probe reports
+DIAGNOSTICS = RESULTS / "diagnostics"  # diagnostic captures: read only for a station's diagnostic box
 OUT = ROOT / "docs" / "index.html"
 
 # Emphasis palette (dataviz skill): one accent + de-emphasis gray.
@@ -51,41 +54,229 @@ PEAK_BW = {
 
 
 # --- Judgements the statistics cannot make ------------------------------------
-# Keyed by session: a record's runId minus its regime suffix. Each function takes
-# the session's summaries as {regime label: summary}, so every number in the
-# prose still comes from the records.
+# Keyed by device identifier. Each function takes that device's sessions (oldest
+# first) and its diagnostic captures, so every number in the prose still comes
+# from the committed files.
+
+WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+APP_PAUSE_S = 3.0  # the app's pause before every repeat (BenchmarkProtocol.pauseBetweenRepeats)
+
+
+def elapsed_starts(sess):
+    """Estimated seconds from the start of the first measured repeat to the start of each repeat, in run
+    order, as {(label, index): seconds}. App captures carry no per-repeat clock, so this sums the pause,
+    time to first token and decode time of every earlier repeat. An estimate, labelled as one."""
+    t, out = 0.0, {}
+    for s in sess["summaries"]:
+        gen = s["run"]["regime"]["generateTokens"]
+        for i, r in enumerate(s["run"]["repeats"]):
+            out[(s["label"], i)] = t
+            t += APP_PAUSE_S + r["ttftMs"] / 1000 + gen / r["decodeTokensPerSec"]
+    return out
+
+
+def ui_mode(run):
+    """What the screen did during repeats. App records finalized before the field existed were live."""
+    if run.get("source") != "app":
+        return None
+    return run.get("uiDuringRepeats", "live")
+
+
+def session_label(sess):
+    run0 = sess["runs"][0]
+    os_ = run0["os"]
+    start = sess["summaries"][0]["run"]["repeats"][0]["thermalStateStart"]
+    ui = ui_mode(run0)
+    bits = [run0["capturedAt"][:10], f"{os_['name']} {os_['version']} ({os_['build']})",
+            "cold start" if start == "nominal" else f"warm start ({start})"]
+    if ui:
+        bits.append({"live": "live chart during repeats", "still": "still screen during repeats"}[ui])
+    return " · ".join(bits)
+
+
+def _rng(vals):
+    lo, hi = min(vals), max(vals)
+    return f"{lo:.2f}" if f"{lo:.2f}" == f"{hi:.2f}" else f"{lo:.2f}–{hi:.2f}"
+
+
+def _thermal_span(reps):
+    seen = []
+    for r in reps:
+        for k in ("thermalStateStart", "thermalStateEnd"):
+            if not seen or seen[-1] != r[k]:
+                seen.append(r[k])
+    return " → ".join(seen)
+
+
+def _diag_silo(diag):
+    return next(g for g in diag["regimes"] if g["label"] == "SILO")
+
+
+def _diag_collapse(diag):
+    """First 64-token window, in any SILO repeat, at least 20% below that repeat's first window."""
+    for r in _diag_silo(diag)["repeats"]:
+        w = r.get("windows") or []
+        for x in w[1:]:
+            if x["tokensPerSec"] <= 0.8 * w[0]["tokensPerSec"]:
+                return r, x
+    return None, None
+
+
+def _a16_account(sessions, diags):
+    """The SILO step on the iPhone 15 Plus, across every session and the diagnostic, plainly."""
+    out = []
+    rows = []
+    for sess in sessions:
+        S = {s["label"]: s for s in sess["summaries"]}
+        li, so = S["LISO"]["decode"]["all"], S["SILO"]["decode"]["all"]
+        reps = S["SILO"]["run"]["repeats"]
+        rows.append(f"{html.escape(sess['capturedAt'][:10])} ({html.escape(sess['runs'][0]['os']['build'])}, "
+                    f"{ui_mode(sess['runs'][0]) or 'harness'}): last LISO {li[-1]:.2f}, first SILO {so[0]:.2f}, "
+                    f"then {_rng(so[1:])} tok/s at {_thermal_span(reps[1:])}")
+    builds = sorted({s["runs"][0]["os"]["build"] for s in sessions})
+    modes = [ui_mode(s["runs"][0]) for s in sessions]
+    out.append(f"<b>It recurs.</b> SILO decode ends up far below LISO in all {WORDS.get(len(sessions), len(sessions))} "
+               f"sessions ({WORDS.get(modes.count('live'))} with the live chart, {WORDS.get(modes.count('still'))} with "
+               f"a still screen), on {WORDS.get(len(builds), len(builds))} OS builds ({', '.join(builds)}): "
+               + "; ".join(rows) + ".")
+    still = [s for s in sessions if ui_mode(s["runs"][0]) == "still"]
+    live = [s for s in sessions if ui_mode(s["runs"][0]) == "live"]
+    if still:
+        def after(sess):
+            so = next(x for x in sess["summaries"] if x["label"] == "SILO")["decode"]["all"]
+            return _rng(so[1:])
+        out.append("<b>It happens with a still screen</b>, so the live chart is not its main cause. After the "
+                   f"step, SILO ran {' and '.join(after(s) for s in still)} tok/s with the screen still, against "
+                   + " and ".join(f"{after(s)} ({html.escape(s['capturedAt'][:10])})" for s in live)
+                   + " with the live chart. That is one run of each kind, so the gap between them is not read "
+                   "as an effect of the chart.")
+    # Timing: when the step arrives, in each ordering.
+    cold = [s for s in sessions if s["summaries"][0]["run"]["repeats"][0]["thermalStateStart"] == "nominal"]
+    warm = [s for s in sessions if s not in cold]
+    t_bits = []
+    if cold:
+        spans = []
+        for s in cold:
+            e = elapsed_starts(s)
+            so = next(x for x in s["summaries"] if x["label"] == "SILO")
+            r0 = so["run"]["repeats"][0]
+            end = e[("SILO", 0)] + r0["ttftMs"] / 1000 + so["run"]["regime"]["generateTokens"] / r0["decodeTokensPerSec"]
+            spans.append((e[("SILO", 0)], end))
+        t_bits.append(f"in {'both' if len(cold) == 2 else 'the'} cold benchmark session{'s' if len(cold) > 1 else ''} "
+                      f"during the first SILO repeat, which ran from about {min(a for a, _ in spans):.0f} to "
+                      f"{max(b for _, b in spans):.0f} s")
+    for s in warm:
+        t_bits.append(f"in the warm-start {html.escape(s['capturedAt'][:10])} session already by the first SILO "
+                      f"repeat, at about {elapsed_starts(s)[('SILO', 0)]:.0f} s")
+    for d in diags:
+        r, x = _diag_collapse(d)
+        if x:
+            t_bits.append(f"in the SILO-first diagnostic at {x['secondsSinceStart']:.0f} s, where decode first fell "
+                          f"20% below its repeat's opening rate (measured)")
+    if t_bits:
+        out.append("<b>It arrives after roughly 70–100 s of continuous load, in every ordering</b>, counting "
+                   "from the first measured repeat: " + "; ".join(t_bits) + ". The benchmark times are estimated "
+                   "from the repeat timings, since those captures carry no clock.")
+    for d in diags:
+        reps = _diag_silo(d)["repeats"]
+        r, x = _diag_collapse(d)
+        if r is not None:
+            nxt = next((q for q in reps if q["index"] == r["index"] + 1), None)
+            if nxt and nxt.get("windows"):
+                low = min(w["tokensPerSec"] for w in r["windows"])
+                out.append(f"<b>Decode bounces back after a pause.</b> In the diagnostic, SILO repeat {r['index'] + 1} "
+                           f"sank to {low:.1f} tok/s in its last windows, and after the {d['plan']['pauseSeconds']:g} s "
+                           f"pause repeat {nxt['index'] + 1} began at {nxt['windows'][0]['tokensPerSec']:.1f}. The "
+                           "benchmark sessions carry no window trace, so whether they bounce back too cannot be seen; "
+                           "their repeat means stay low.")
+    out.append("<b>The cause is still unexplained.</b> A recovery test, which heats the phone and then times how "
+               "long decode takes to come back, is the next experiment. Until the step is understood, no "
+               "peak-to-sustained percentage is quoted for this phone and its SILO figures are not a "
+               "sustained-throughput estimate. Station 01's harness drew nothing during a repeat; of these "
+               "sessions, the still-screen one is the closest match to it.")
+    return out
+
+
+def _a16_diag_box(sessions, diags):
+    """What the SILO-first diagnostic showed, per repeat, from its capture."""
+    if not diags:
+        return ""
+    d = diags[-1]
+    rows = []
+    for r in _diag_silo(d)["repeats"]:
+        w = [x["tokensPerSec"] for x in r.get("windows") or []]
+        rows.append(f"<tr><th>SILO {r['index'] + 1}</th><td>{r['startSeconds']:.0f}</td>"
+                    f"<td>{r['decodeTokensPerSec']:.2f}</td><td>{w[0]:.1f}</td><td>{w[-1]:.1f}</td>"
+                    f"<td>{min(w):.1f}</td><td>{r['thermalStateStart']} → {r['thermalStateEnd']}</td></tr>")
+    after = next((g for g in d["regimes"] if g["label"] == "SISO"), None)
+    siso = ""
+    if after:
+        siso = (f" The {WORDS.get(len(after['repeats']), len(after['repeats']))} SISO repeats that followed, still at "
+                f"{after['repeats'][0]['thermalStateStart']}, decoded at "
+                + ", ".join(f"{r['decodeTokensPerSec']:.2f}" for r in after["repeats"]) + " tok/s.")
+    falls = []
+    for r in _diag_silo(d)["repeats"]:
+        w = [x["tokensPerSec"] for x in r.get("windows") or []]
+        falls.append(f"{(w[-1] - w[0]) / w[0] * 100:+.0f}%")
+    post = [v for sess in sessions for x in sess["summaries"] if x["label"] == "SILO" for v in x["decode"]["all"][1:]]
+    low_bench = f"{min(post):.0f}–{max(post):.0f}"
+    c = d["conditions"]
+    net = "network on" if c.get("airplaneMode") is False else "airplane mode"
+    os_ = d["os"]
+    return f"""
+  <div class="note" style="margin-top:18px">
+    <p><b>What the diagnostic showed.</b> One SILO-first run ({html.escape(d['capturedAt'][:10])},
+    {html.escape(os_['name'])} {html.escape(os_['version'])} ({html.escape(os_['build'])}), cold start, still screen,
+    {net}): {WORDS.get(len(_diag_silo(d)['repeats']))} {_diag_silo(d)['generateTokens']}-token SILO repeats from a cool phone, with the decode rate of every 64-token window recorded.
+    It is not a matrix v1 run: none of its numbers enter the session charts, tables or statistics below.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Repeat</th><th>Start s</th><th>Decode tok/s</th><th>First window</th><th>Last window</th>
+      <th>Lowest window</th><th>Thermal</th></tr></thead>
+      <tbody>{''.join(rows)}</tbody>
+    </table></div>
+    <p style="margin-top:8px">Inside each repeat decode fell from first to last window ({', '.join(falls)}) and
+    restarted fast after the {d['plan']['pauseSeconds']:g} s pause. It sank furthest late in a repeat once iOS
+    reported serious, but never to the {low_bench} tok/s the benchmark sessions sat at after the step.{siso} harness/diagnose.py read the
+    run as mixed: it does not clearly fit any of the three explanations the script tests. Raw capture and reading:
+    results/diagnostics/.</p>
+  </div>
+"""
+
 
 def _a16_caption(S):
-    li, si, so = S["LISO"], S["SISO"]["decode"], S["SILO"]["decode"]
-    d, reps = li["decode"], li["run"]["repeats"]
-    return (f"<b>LISO</b> declines monotonically — Spearman rho {d['rho']:+.2f}, {d['all'][0]:.2f} → "
-            f"{d['all'][-1]:.2f} tok/s as the thermal state goes {reps[0]['thermalStateStart']} → "
-            f"{reps[-1]['thermalStateEnd']} — while SISO holds flat (CV {si['cv']:.1f}%). SILO starts at "
-            f"{so['all'][0]:.2f} tok/s, a step down from LISO's last repeat. That step is caveat 3 and is "
-            "unexplained, so the SILO line is not read here as a throttling curve.")
+    so, li = S["SILO"]["decode"]["all"], S["LISO"]["decode"]["all"]
+    return (f"Decode tok/s per repeat, one line per regime, regimes in run order. <b>SILO</b> (accent) starts at "
+            f"{so[0]:.2f} tok/s against LISO's last {li[-1]:.2f}, then runs {_rng(so[1:])}. Spearman rho: "
+            + ", ".join(f"{k} {S[k]['decode']['rho']:+.2f}" for k in REGIME_ORDER if k in S)
+            + ". Dashed rings mark repeats flagged for a mid-run thermal transition.")
 
 
-def _a16_silo_step(S):
-    lr, sr = S["LISO"]["run"], S["SILO"]["run"]
-    a, b = lr["repeats"][-1], sr["repeats"][0]
-    return (f"<b>The SILO step is unexplained.</b> Decode fell from {a['decodeTokensPerSec']:.2f} tok/s in the "
-            f"last LISO repeat to {b['decodeTokensPerSec']:.2f} tok/s in the first SILO repeat, seconds later, "
-            f"with the thermal state {a['thermalStateEnd']} on both sides, while prefill rose from "
-            f"{a['prefillTokensPerSec']:.0f} to {b['prefillTokensPerSec']:.0f} tok/s (over "
-            f"{lr['regime']['promptTokens']}- and {sr['regime']['promptTokens']}-token prompts). A plain thermal "
-            "slowdown would have pulled prefill down too, and nothing recorded here explains the step. A "
-            "cold-start run with SILO first is owed. Until it exists, no peak-to-sustained percentage is quoted "
-            "for this phone, and its SILO figures are not a sustained-throughput estimate.")
-
-
-SESSION_NOTES = {
-    "iphone-15-plus-ios27.0-24A437-tinyllama-1-1b-1t-openorca-q4_0-20261005t011056z": {
+DEVICE_NOTES = {
+    "iPhone15,5": {
+        "account_title": "The SILO step: what is known",
+        "account": _a16_account,
+        "diag_box": _a16_diag_box,
         "caption": _a16_caption,
-        "aria": ("Decode throughput per repeat for each regime on the iPhone 15 Plus. LISO declines "
-                 "monotonically and SISO stays flat; SILO sits far below both from its first repeat."),
-        "caveats": [_a16_silo_step],
+        "focus": "SILO",
+        "aria": ("Decode throughput per repeat for each regime on the iPhone 15 Plus. SISO and LISO stay "
+                 "high; SILO falls far below them, from its first or second repeat."),
     },
 }
+
+
+def diagnostics_for(identifier):
+    """Diagnostic captures for one phone, oldest first. Read only for that station's diagnostic box:
+    never as run records, never into any table or statistic."""
+    out = []
+    for p in sorted(DIAGNOSTICS.glob("*.json")):
+        try:
+            d = json.loads(p.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+        if d.get("kind") == "diagnostic" and d.get("device", {}).get("identifier") == identifier:
+            out.append(d)
+    out.sort(key=lambda d: d["capturedAt"])
+    return out
 
 
 def achieved_bandwidth(decode_tok_s, tensor_bytes):
@@ -269,7 +460,7 @@ def compare_chart(phone_sum, anchor_sum, metric="decode"):
             f'generations. The mains-powered anchor holds flat; the phone declines.">{"".join(parts)}</svg>')
 
 
-def line_chart(summaries, metric="decode", aria=None):
+def line_chart(summaries, metric="decode", aria=None, focus=None):
     """Emphasis line chart: the throttling series in accent, the rest as context."""
     W, H = 720, 300
     ml, mr, mt, mb = 54, 116, 18, 40
@@ -291,7 +482,8 @@ def line_chart(summaries, metric="decode", aria=None):
         return mt + ph - (v - lo) / (hi - lo) * ph
 
     # The emphasised series is the one with the strongest monotonic decline.
-    focus = min(series, key=lambda s: s[metric]["rho"])["label"]
+    if focus not in [s["label"] for s in series]:
+        focus = min(series, key=lambda s: s[metric]["rho"])["label"]
 
     parts = []
     # recessive gridlines + y labels
@@ -375,18 +567,12 @@ def repeat_rows(summaries):
 def derived_caveats(sess, ref):
     """Caveats that follow from the records themselves (ref = station 01's session)."""
     out = []
-    run0, ref0 = sess["runs"][0], ref["runs"][0]
     start = sess["summaries"][0]["run"]["repeats"][0]["thermalStateStart"]
     if start != "nominal":
         same = ref["summaries"][0]["run"]["repeats"][0]["thermalStateStart"] != "nominal"
         out.append(f"<b>Warm start.</b> The run began at thermal state <b>{html.escape(start)}</b>, not "
                    "<b>nominal</b>: the ten-minute cooldown of METHODOLOGY §5 was not achieved, so these are "
                    f"<b>warm-start</b> figures{', the same deviation as station 01' if same else ''}.")
-    if run0.get("source") == "app" and ref0.get("source") != "app":
-        out.append("<b>Captured with the app.</b> The PocketRoofline app redraws a live decode chart while each "
-                   "repeat runs; the harness that captured station 01 drew nothing during a repeat. GPU contention "
-                   "from that drawing is a possible confound, so a difference between this phone and station 01 "
-                   "cannot yet be put down to the silicon alone.")
     return out
 
 
@@ -404,26 +590,30 @@ def probe_conditions(probes):
     return ", ".join(parts)
 
 
-def station_block(sess, number, anchor_id, tag, ref, ceilings):
-    """One later phone session: its own chart, tables, roofline placement, caveats and provenance.
+def session_block(sess, idx, ref, ceilings, note):
+    """One session of a later phone: its own chart, tables, roofline placement, caveats and provenance.
     No peak-to-sustained headline: the page carries one, station 01's."""
     sums = sess["summaries"]
     S = {s["label"]: s for s in sums}
     run0, ref0 = sess["runs"][0], ref["runs"][0]
     dev, os_, mdl, bk = run0["device"], run0["os"], run0["model"], run0["backend"]
-    note = SESSION_NOTES.get(sess["key"], {})
-    caveats = derived_caveats(sess, ref) + [f(S) for f in note.get("caveats", [])]
+    caveats = derived_caveats(sess, ref)
     tb = mdl.get("tensorBytes")
     ceil = ceilings.get((dev.get("identifier"), os_["build"]))
+    other_ceil = [(b, c) for (ident, b), c in sorted(ceilings.items()) if ident == dev.get("identifier") and b != os_["build"]]
     from_app = run0.get("source") == "app"
 
     same = (mdl["fileSha256"] == ref0["model"]["fileSha256"]
             and bk.get("commit") == ref0["backend"].get("commit")
             and [s["run"]["regime"] for s in sums] == [s["run"]["regime"] for s in ref["summaries"]])
     via = f"PocketRoofline app {run0.get('appVersion', '')}".rstrip() if from_app else "iOS harness"
-    lede = (f"{html.escape(os_['name'])} {html.escape(os_['version'])} ({html.escape(os_['build'])}), captured "
-            f"{html.escape(run0['capturedAt'][:10])} with the {html.escape(via)}"
+    ui = ui_mode(run0)
+    lede = (f"Captured {html.escape(run0['capturedAt'][:10])} with the {html.escape(via)}"
             + (", on the same model file, regimes and llama.cpp commit as station 01." if same else "."))
+    if ui == "live":
+        lede += " The run screen redrew a live decode chart during every repeat."
+    elif ui == "still":
+        lede += " Nothing on screen redrew while a repeat measured; the app updated only in the pauses."
     siso = S.get("SISO")
     if siso:
         d = siso["decode"]
@@ -435,18 +625,17 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
                 lede += (f": <b>{bw / ceil['gbps'] * 100:.0f}% of this phone's measured ceiling</b> "
                          f"({ceil['gbps']:.1f} GB/s, Headroom probe)")
         lede += "."
-    if caveats:
-        lede += " Read the caveats below before using any figure from this phone."
 
     cav = ""
     if caveats:
-        cav = ('\n  <div class="note" style="margin-top:18px">\n    <p><b>Caveats, which apply to every figure in '
-               'this section:</b></p>\n    <ol>' + "".join(f"<li>{c}</li>" for c in caveats) + "</ol>\n  </div>\n")
+        cav = ('\n  <div class="note" style="margin-top:18px">\n    <p><b>Caveat for this session, on top of the '
+               'account above:</b></p>\n    <ol>' + "".join(f"<li>{c}</li>" for c in caveats) + "</ol>\n  </div>\n")
 
     caption = note["caption"](S) if "caption" in note else (
         "Decode tok/s per repeat, one line per regime, regimes in run order. Spearman rho against repeat order: "
         + ", ".join(f"{s['label']} {s['decode']['rho']:+.2f}" for s in sums) + ".")
-    chart = line_chart(sums, "decode", aria=note.get("aria", "Decode throughput per repeat for each regime."))
+    chart = line_chart(sums, "decode", aria=note.get("aria", "Decode throughput per repeat for each regime."),
+                       focus=note.get("focus"))
 
     bw_block = ""
     if tb:
@@ -455,7 +644,12 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
             d = s["decode"]
             bw_mean = achieved_bandwidth(d["mean"], tb)
             bw_last = achieved_bandwidth(d["all"][-1], tb)
-            util = f"{bw_mean / ceil['gbps'] * 100:.0f}%" if ceil else published_util(dev["soc"], bw_mean)
+            if ceil:
+                util = f"{bw_mean / ceil['gbps'] * 100:.0f}%"
+            elif other_ceil:
+                util = "not probed on this build"
+            else:
+                util = published_util(dev["soc"], bw_mean)
             rows.append(f"<tr><th>{html.escape(dev['soc'])}</th><td>{s['label']}</td>"
                         f"<td>{d['mean']:.2f}</td><td>{bw_mean:.1f}</td>"
                         f"<td>{bw_last:.1f}</td><td>{util}</td></tr>")
@@ -491,15 +685,22 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
                 f"{html.escape(run0['capturedAt'][11:19])} UTC, at the end of the run. No published "
                 f"{html.escape(dev['soc'])} figure is used.</p>"
                 f"<p style=\"margin-top:8px\">The ceiling was measured at thermal state {'/'.join(sorted(thermal))}."
-                f"{like} The caveats above apply to every row.</p>")
+                f"{like} The account and caveats above apply to every row.</p>")
+        elif other_ceil:
+            head = "% of measured ceiling"
+            b, c = other_ceil[-1]
+            bw_note = (f"<p>This phone's measured ceiling ({c['gbps']:.1f} GB/s, Headroom probe) was taken on OS "
+                       f"build {html.escape(b)}, not on {html.escape(os_['build'])}, and no published figure is "
+                       "used, so this session gets achieved bandwidth only. The roofline placement for this phone "
+                       f"is the {html.escape(b)} session's.</p>")
         else:
             head = "% of published peak"
             bw_note = ("<p>No measured ceiling exists yet for this phone; any percentage is against a published "
                        "figure, not a measurement (METHODOLOGY §3).</p>")
         bw_block = f"""
-  <h3>Where this sits on the roofline</h3>
+  <h4>Where this sits on the roofline</h4>
   <p class="lede" style="font-size:15px">The same conversion as station 01: decode tok/s × {tb/1e9:.3f} GB of
-  weights per token gives achieved memory bandwidth, placed here against {'a ceiling measured on this phone' if ceil else 'a published peak, where one exists'}.</p>
+  weights per token gives achieved memory bandwidth{', placed here against a ceiling measured on this phone' if ceil else ('; no ceiling was probed on this build' if other_ceil else ', placed here against a published peak, where one exists')}.</p>
   <div class="scroll"><table>
     <thead><tr><th>SoC</th><th>Regime</th><th>Decode tok/s</th><th>Achieved GB/s</th>
     <th>Final repeat GB/s</th><th>{head}</th></tr></thead>
@@ -521,6 +722,8 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
             bits.append("Low Power Mode off")
         if "batteryStartPct" in cond and "batteryEndPct" in cond:
             bits.append(f"battery {cond['batteryStartPct']:g}% → {cond['batteryEndPct']:g}%")
+        if ui:
+            bits.append(f"screen {ui} during repeats")
         conditions_line = ", ".join(bits) + ", app in foreground"
     else:
         conditions_line = "airplane mode, unplugged, app in foreground"
@@ -532,31 +735,31 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
         raw.append(f"bandwidth probes: {len(ceil['probes'])} reports in results/bandwidth/")
 
     return f"""
-  <section class="station" id="{anchor_id}">
-  <p class="eyebrow">PocketRoofline · station {number:02d}{tag}</p>
-  <h2 class="st">{html.escape(dev['model'])} ({html.escape(dev['soc'])}, {dev['ramGB']:g}&nbsp;GB)</h2>
+  <div class="session" id="{sess['anchor']}">
+  <p class="eyebrow">Session {idx}</p>
+  <h3 class="sess">{html.escape(session_label(sess))}</h3>
   <p class="lede">{lede}</p>
   {cav}
-  <h3>Decode throughput per repeat</h3>
+  <h4>Decode throughput per repeat</h4>
   <figure>
     {chart}
     <figcaption>{caption}</figcaption>
   </figure>
 
-  <h3>Per regime</h3>
+  <h4>Per regime</h4>
   <div class="scroll"><table>
     <thead><tr><th>Regime</th><th>in / out</th><th>Prefill tok/s</th><th>Decode tok/s</th>
     <th>95% CI (decode)</th><th>First→last</th><th>rho</th><th>Thermal</th></tr></thead>
     <tbody>{regime_rows(sums)}</tbody>
   </table></div>
   {bw_block}
-  <h3>Every repeat</h3>
+  <h4>Every repeat</h4>
   <div class="scroll"><table>
     <thead><tr><th>Run</th><th>Prefill tok/s</th><th>Decode tok/s</th><th>TTFT ms</th><th>Thermal</th></tr></thead>
     <tbody>{repeat_rows(sums)}</tbody>
   </table></div>
 
-  <h3>Provenance</h3>
+  <h4>Provenance</h4>
   <p class="meta">
     {html.escape(dev['model'])} · {html.escape(dev['soc'])} · {dev['ramGB']} GB{' · ' + html.escape(dev['identifier']) if dev.get('identifier') else ''}<br>
     {html.escape(os_['name'])} {html.escape(os_['version'])} ({html.escape(os_['build'])})<br>
@@ -564,6 +767,41 @@ def station_block(sess, number, anchor_id, tag, ref, ceilings):
     {html.escape(mdl['id'])} {html.escape(mdl['quant'])} · {mdl['params']:.3g}B · sha256 {html.escape(mdl['fileSha256'][:16])}…<br>
     {html.escape(via)} · {html.escape(conditions_line)}{''.join('<br>' + x for x in raw)}
   </p>
+  </div>
+"""
+
+
+def station_section(number, anchor_id, sessions, ref, ceilings):
+    """One later phone: a header, the device-level account and diagnostic box, then each session apart."""
+    run0 = sessions[0]["runs"][0]
+    dev = run0["device"]
+    ident = dev.get("identifier")
+    note = DEVICE_NOTES.get(ident, {})
+    diags = diagnostics_for(ident) if "diag_box" in note else []
+    for i, sess in enumerate(sessions, 1):
+        sess["anchor"] = f"{anchor_id}-s{i}"
+    n = len(sessions)
+    lede = (f"{WORDS.get(n, n)} benchmark session{'s' if n > 1 else ''} on this phone, "
+            + ("each shown on its own and never pooled, oldest first: " if n > 1 else "")
+            + "; ".join(f'<a href="#{s["anchor"]}">session {i}</a>, {html.escape(session_label(s))}'
+                        for i, s in enumerate(sessions, 1)) + ".")
+    lede = lede[0].upper() + lede[1:]
+    if "account" in note:
+        lede += " Read the account below before using any figure from this phone."
+    account = ""
+    if "account" in note:
+        items = note["account"](sessions, diags)
+        account = (f'\n  <div class="note" style="margin-top:18px">\n    <p><b>{html.escape(note["account_title"])}'
+                   '</b> (applies to every session below)</p>\n    <ol>'
+                   + "".join(f"<li>{c}</li>" for c in items) + "</ol>\n  </div>\n")
+    box = note["diag_box"](sessions, diags) if diags else ""
+    blocks = "".join(session_block(s, i, ref, ceilings, note) for i, s in enumerate(sessions, 1))
+    return f"""
+  <section class="station" id="{anchor_id}">
+  <p class="eyebrow">PocketRoofline · station {number:02d}</p>
+  <h2 class="st">{html.escape(dev['model'])} ({html.escape(dev['soc'])}, {dev['ramGB']:g}&nbsp;GB)</h2>
+  <p class="lede">{lede}</p>
+  {account}{box}{blocks}
   </section>
 """
 
@@ -577,27 +815,19 @@ def main():
     stations = sessions_of([r for r in runs if r["device"]["soc"] != ANCHOR_SOC])
     ceilings = measured_ceilings()
 
-    # Station numbers follow the device, in order of its first session. A device
-    # with more than one session gets each session's capture date in its label.
+    # Station numbers follow the device, in order of its first session. Station 01's
+    # first session carries the page headline; every other session is shown inside
+    # its device's station section, each session on its own.
     def device_key(sess):
         d = sess["runs"][0]["device"]
         return d.get("identifier") or d["model"]
 
-    per_device = {}
-    for sess in stations:
-        per_device[device_key(sess)] = per_device.get(device_key(sess), 0) + 1
-    numbers, ids, placed = {}, set(), []
-    for sess in stations:
-        n = numbers.setdefault(device_key(sess), len(numbers) + 1)
-        anchor_id = f"station-{n:02d}"
-        k = 2
-        while anchor_id in ids:
-            anchor_id, k = f"station-{n:02d}-{k}", k + 1
-        ids.add(anchor_id)
-        tag = f" · {sess['capturedAt'][:10]}" if per_device[device_key(sess)] > 1 else ""
-        placed.append((n, anchor_id, sess, tag))
     first = stations[0]
-    later = placed[1:]
+    numbers, grouped = {device_key(first): 1}, {}
+    for sess in stations[1:]:
+        n = numbers.setdefault(device_key(sess), len(numbers) + 1)
+        grouped.setdefault(n, []).append(sess)
+    later = [(n, f"station-{n:02d}", grouped[n]) for n in sorted(grouped)]
 
     phone = first["runs"]
     summaries = first["summaries"]
@@ -618,11 +848,12 @@ def main():
     nav = ""
     if later:
         links = " · ".join(
-            f'<a href="#{aid}">station {n:02d} · {html.escape(s["runs"][0]["device"]["model"])} '
-            f'({html.escape(s["runs"][0]["device"]["soc"])}){tag}</a>' for n, aid, s, tag in later)
+            f'<a href="#{aid}">station {n:02d} · {html.escape(ss[0]["runs"][0]["device"]["model"])} '
+            f'({html.escape(ss[0]["runs"][0]["device"]["soc"])})</a>'
+            + (f", {WORDS.get(len(ss), len(ss))} sessions" if len(ss) > 1 else "") for n, aid, ss in later)
         nav = (f'\n  <p class="meta stations">Station 01 is the {html.escape(dev["model"])} whose figures follow. '
                f"Also measured: {links}, further down, {'each ' if len(later) > 1 else ''}with its caveats "
-               "up front.</p>\n")
+               f"up front{' and each session shown on its own' if any(len(ss) > 1 for _, _, ss in later) else ''}.</p>\n")
 
     # --- Roofline placement: achieved memory bandwidth vs published peak ---
     tb = mdl.get("tensorBytes")
@@ -642,8 +873,9 @@ def main():
                     f"<td>{bw_last:.1f}</td><td>{util}</td></tr>"
                 )
         notes = " · ".join(f"{html.escape(k)}: {html.escape(v['note'])}" for k, v in PEAK_BW.items())
-        measured_later = [(aid, s) for n, aid, s, tag in later
-                          if (s["runs"][0]["device"].get("identifier"), s["runs"][0]["os"]["build"]) in ceilings]
+        measured_later = [(aid, ss[0]) for n, aid, ss in later
+                          if any((s["runs"][0]["device"].get("identifier"), s["runs"][0]["os"]["build"]) in ceilings
+                                 for s in ss)]
         measured_note = ""
         if measured_later:
             refs = ", ".join(f'the {html.escape(s["runs"][0]["device"]["soc"])} at <a href="#{aid}">'
@@ -692,7 +924,7 @@ def main():
   </figure>
 """
 
-    station_blocks = "".join(station_block(s, n, aid, tag, first, ceilings) for n, aid, s, tag in later)
+    station_blocks = "".join(station_section(n, aid, ss, first, ceilings) for n, aid, ss in later)
 
     doc = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -762,6 +994,13 @@ def main():
   .station h3 {{ font-size: 13px; letter-spacing: .12em; text-transform: uppercase; font-family: ui-monospace, Menlo, monospace;
         color: var(--ink2); margin: 44px 0 14px; display: flex; align-items: center; gap: 12px; }}
   .station h3::after {{ content: ""; flex: 1; border-top: 1px solid var(--rule); }}
+  .station h4 {{ font-size: 13px; letter-spacing: .12em; text-transform: uppercase; font-family: ui-monospace, Menlo, monospace;
+        color: var(--ink2); margin: 36px 0 14px; display: flex; align-items: center; gap: 12px; }}
+  .station h4::after {{ content: ""; flex: 1; border-top: 1px solid var(--rule); }}
+  .session {{ margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--rule); }}
+  .station h3.sess {{ font: 700 clamp(18px, 2.8vw, 22px)/1.25 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        letter-spacing: -.01em; text-transform: none; color: var(--ink); margin: 10px 0 10px; display: block; }}
+  .station h3.sess::after {{ content: none; }}
   .note ol {{ margin: 8px 0 0 20px; }}
   .note li + li {{ margin-top: 8px; }}
 </style></head><body><main>
@@ -848,17 +1087,18 @@ def main():
         d = s["decode"]
         print(f"  {s['label']:5s} decode mean {d['mean']:6.2f} sd {d['sd']:4.2f} "
               f"CI [{d['ci'][0]:.2f},{d['ci'][1]:.2f}] first->last {d['first_last_pct']:+6.1f}% rho {d['rho']:+.2f}")
-    for n, aid, sess, tag in later:
-        r0 = sess["runs"][0]
-        ceil = ceilings.get((r0["device"].get("identifier"), r0["os"]["build"]))
-        print(f"station {n:02d} ({r0['device']['model']}): no headline"
-              + (f"; measured ceiling {ceil['gbps']:.3f} GB/s (median of {len(ceil['probes'])} probes)" if ceil else ""))
-        for s in sess["summaries"]:
-            d = s["decode"]
-            bw = achieved_bandwidth(d["mean"], r0["model"]["tensorBytes"]) if r0["model"].get("tensorBytes") else float("nan")
-            print(f"  {s['label']:5s} decode mean {d['mean']:6.2f} sd {d['sd']:4.2f} "
-                  f"CI [{d['ci'][0]:.2f},{d['ci'][1]:.2f}] first->last {d['first_last_pct']:+6.1f}% rho {d['rho']:+.2f}"
-                  f" | {bw:.2f} GB/s" + (f" = {bw / ceil['gbps'] * 100:.1f}% of ceiling" if ceil else ""))
+    for n, aid, ss in later:
+        for i, sess in enumerate(ss, 1):
+            r0 = sess["runs"][0]
+            ceil = ceilings.get((r0["device"].get("identifier"), r0["os"]["build"]))
+            print(f"station {n:02d} session {i} ({r0['device']['model']}, {session_label(sess)}): no headline"
+                  + (f"; measured ceiling {ceil['gbps']:.3f} GB/s (median of {len(ceil['probes'])} probes)" if ceil else ""))
+            for s in sess["summaries"]:
+                d = s["decode"]
+                bw = achieved_bandwidth(d["mean"], r0["model"]["tensorBytes"]) if r0["model"].get("tensorBytes") else float("nan")
+                print(f"  {s['label']:5s} decode mean {d['mean']:6.2f} sd {d['sd']:4.2f} "
+                      f"CI [{d['ci'][0]:.2f},{d['ci'][1]:.2f}] first->last {d['first_last_pct']:+6.1f}% rho {d['rho']:+.2f}"
+                      f" | {bw:.2f} GB/s" + (f" = {bw / ceil['gbps'] * 100:.1f}% of ceiling" if ceil else ""))
     print(f"wrote {OUT.relative_to(ROOT)} ({len(doc)} bytes)")
 
 

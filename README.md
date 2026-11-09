@@ -86,42 +86,55 @@ its throughput. Thermal behaviour, not raw silicon speed, is the thing phone
 benchmarks have to capture — and it is precisely what a plugged-in laptop, a
 Jetson or a Raspberry Pi cannot show.
 
-## Second phone: iPhone 15 Plus (A16), with three open caveats
+## Second phone: iPhone 15 Plus (A16): three sessions, one unexplained SILO step
 
-iPhone 15 Plus (A16 Bionic, 6 GB) · iOS 27.0 (24A437) · TinyLlama-1.1B Q4_0 · llama.cpp-Metal
-(`95ef7fc`) · captured 2026-10-05 with the PocketRoofline app 1.0 (1) · radios off, unplugged ·
-5 repeats per regime.
+iPhone 15 Plus (A16 Bionic, 6 GB) · TinyLlama-1.1B Q4_0 · llama.cpp-Metal (`95ef7fc`) · PocketRoofline
+app 1.0 (1) · airplane mode, unplugged · 5 repeats per regime. Three sessions, each kept separate, never
+pooled. Decode tok/s:
 
-| Regime | Prefill tok/s | Decode tok/s | Thermal state |
-|---|---|---|---|
-| SISO (128 in / 128 out) | 607.1 | **65.16** (sd 0.52) | fair, stable |
-| LISO (2048 in / 128 out) | 500.4 (−21.9%) | 63.91 → 59.17, monotonic (rho −1.00) | fair → **serious** |
-| SILO (128 in / 1024 out) | 461.8 (+0.5%) | 29.69, 30.89, 31.73, 28.00, 27.16 | serious throughout |
+| Session | SISO | LISO | SILO, each repeat | Thermal during SILO |
+|---|---|---|---|---|
+| 2026-10-05 · iOS 27.0 (24A437) · warm start · live chart | **65.16** (sd 0.52) | 63.91 → 59.17 | 29.69, 30.89, 31.73, 28.00, 27.16 | serious |
+| 2026-11-08 · iOS 27.0.1 (24A446) · cold start · live chart | 66.00 → 58.50 (mean 62.24) | 58.79 → 57.12 | 42.01, 24.94, 25.65, 25.78, 25.64 | nominal → fair |
+| 2026-11-08 · iOS 27.0.1 (24A446) · cold start · still screen | **57.25** (sd 0.17) | 56.95 → 55.88 | 51.19, 34.61, 33.19, 32.42, 30.05 | fair → serious |
 
-**Roofline placement against a measured ceiling.** SISO decode reads weights at 41.4 GB/s, which is
-**91% of this phone's measured ceiling** of 45.3 GB/s. The ceiling is the median of four
-[Headroom](https://github.com/Umer9538/headroom) probes (a Metal STREAM triad over three 128 MiB
-buffers) taken on the same phone just before the run, at thermal state `fair`, on battery. It is the
-measured ceiling METHODOLOGY §3 asks for, and the A16 is the first chip here to have one. The A15 does
-not have one yet: its placement on the results page still rests on published figures that disagree.
-The ceiling was measured at `fair`, so SISO, also at `fair`, is the like-for-like row. No published A16
-figure is used.
+"Live chart" means the app redrew a decode chart during every repeat; "still screen" means nothing
+redrew until the pause between repeats (`uiDuringRepeats` in each record).
 
-Three caveats, recorded in every run file and shown beside every figure on the page:
+**Roofline placement against a measured ceiling.** In the 2026-10-05 session, SISO decode reads weights
+at 41.4 GB/s, which is **91% of this phone's measured ceiling** of 45.3 GB/s. The ceiling is the median of
+four [Headroom](https://github.com/Umer9538/headroom) probes (a Metal STREAM triad over three 128 MiB
+buffers) taken on the same phone and OS build just before that run, at thermal state `fair`, on battery.
+It is the measured ceiling METHODOLOGY §3 asks for, and the A16 is the first chip here to have one; the
+A15's placement still rests on published figures that disagree. The ceiling was not re-probed on 24A446,
+so the November sessions get achieved bandwidth only. No published A16 figure is used.
 
-1. **Warm start.** The phone was at thermal state `fair` when the run began. The 10-minute cooldown of
-   METHODOLOGY §5 was not achieved, the same deviation as the iPhone 13 session.
-2. **App capture.** The app redraws a live decode chart while each repeat runs; the iPhone 13 harness
-   drew nothing during a repeat. GPU contention from that drawing is a possible confound, so the gap
-   between the two phones is not yet a clean silicon comparison.
-3. **An unexplained step.** Decode fell from 59.17 tok/s (last LISO repeat) to 29.69 tok/s (first SILO
-   repeat) seconds later, with the thermal state already `serious` on both sides, while prefill rose
-   from 429 to 465 tok/s (2048- vs 128-token prompts). A plain thermal slowdown would have pulled
-   prefill down too. The step is unexplained, and a cold-start run with SILO first is owed.
+**The SILO step: what is known.**
 
-Until that run exists, no peak-to-sustained percentage is quoted for this phone, and its SILO numbers
-are not a sustained-throughput figure. Raw capture: [`results/captures/`](results/captures/); probe
-reports: [`results/bandwidth/`](results/bandwidth/).
+- **It recurs.** In all three sessions, on two OS builds, SILO decode ends up far below LISO: the last
+  LISO repeat ran 59.17, 57.12 and 55.88 tok/s, and the SILO repeats after the first ran 27–32, 25–26
+  and 30–35 tok/s.
+- **It happens with a still screen**, so the live chart is not its main cause. After the step SILO ran
+  30.05–34.61 tok/s with the screen still and 24.94–25.78 in the cold live-chart session. That is one run
+  of each, so the gap is not read as an effect of the chart.
+- **It arrives after roughly 70–100 s of continuous load, in every ordering:** during the first SILO
+  repeat (about 72–97 s in, estimated from repeat timings) in both cold sessions, and at 81 s in a
+  SILO-first diagnostic run. In the cold live-chart session iOS reported only `fair`, never `serious`.
+- **Decode bounces back after a pause.** In the diagnostic, decode fell about 10% inside each 1024-token
+  repeat and started fast again after the 3 s pause; once iOS reported `serious` it sank to about 40 tok/s
+  late in a repeat (lowest 64-token windows 42.0 and 38.8), yet the repeats after those began at 57.7
+  and 57.4. The benchmark
+  sessions record no per-window trace, so whether they bounce back too cannot be seen.
+- **The cause is still unexplained.** The next experiment is the app's recovery test, which heats the
+  phone and times how long decode takes to come back.
+
+**Warm start (2026-10-05 session only).** The phone was at thermal state `fair` when that run began; the
+10-minute cooldown of METHODOLOGY §5 was not achieved, the same deviation as the iPhone 13 session.
+
+No peak-to-sustained percentage is quoted for this phone, and its SILO numbers are not a
+sustained-throughput figure. Repeats whose thermal state changed mid-run are flagged and left out of
+the aggregates (METHODOLOGY §5). Raw captures: [`results/captures/`](results/captures/); diagnostic:
+[`results/diagnostics/`](results/diagnostics/); probe reports: [`results/bandwidth/`](results/bandwidth/).
 
 ---
 
@@ -208,12 +221,12 @@ captures are checked with `harness/finalize.py --check` before they land in
 
 Published so far: one model (TinyLlama-1.1B Q4_0), one backend
 (llama.cpp-Metal), three devices (two phones and the M1 control), three
-regimes, five repeats each. Both phone sessions are warm-start, and the second
-(iPhone 15 Plus, captured with the app) carries an unexplained SILO step. The
+regimes, five repeats each. The iPhone 13 session is warm-start; the iPhone 15
+Plus has three sessions (one warm, two cold) and an unexplained SILO step. The
 STREAM-style bandwidth ceiling of METHODOLOGY §3 is measured for the A16 only.
 Not yet measured: other models and quantisations, MLC and Core ML backends, the
-A15's bandwidth ceiling, cold-start sessions, energy per token, and any device
-beyond these three. This section is the current truth and will be kept current.
+A15's bandwidth ceiling, a cold-start iPhone 13 session, energy per token, and
+any device beyond these three. This section is the current truth and will be kept current.
 
 ## Layout
 

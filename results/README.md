@@ -7,10 +7,12 @@ a new run with a note, so the record stays auditable.
 - `*.json` in this directory: the run records, one per regime of a session, written by
   `harness/finalize.py` and checked by `harness/validate.py`. They are what `harness/report.py` reads.
 - [`captures/`](captures/): the raw capture each session's records were finalized from, byte-for-byte as
-  exported from the device, so the records can be regenerated and audited. The iPhone 15 Plus records came
-  from `python3 harness/finalize.py "results/captures/pocketroofline-iPhone15,5-1791162656.json" --notes …`,
-  with the notes text as it appears in each record. Captures are kept from 2026-10-05 on; earlier sessions'
-  captures were not committed.
+  exported from the device, so the records can be regenerated and audited. Each iPhone 15 Plus session's
+  records came from `python3 harness/finalize.py "results/captures/<capture>.json" --notes …`, with the notes
+  text as it appears in each record: `…-1791162656` (2026-10-05), `…-1794177120` and `…-1794179630`
+  (both 2026-11-08). Since the November captures, finalize.py flags any repeat whose thermal state changed
+  mid-run (METHODOLOGY §5); the October capture has none, so its records are unchanged by that.
+  Captures are kept from 2026-10-05 on; earlier sessions' captures were not committed.
 - [`bandwidth/`](bandwidth/): raw [Headroom](https://github.com/Umer9538/headroom) probe reports, byte-for-byte.
   Each runs Metal STREAM copy, scale, add and triad kernels over 128 MiB buffers. Together they give the
   measured bandwidth ceiling of METHODOLOGY §3: for each phone model and OS build, `harness/report.py` takes
@@ -21,9 +23,11 @@ a new run with a note, so the record stays auditable.
 - `diagnostics/`: captures from the app's diagnostic run (`"kind": "diagnostic"`, `"matrixVersion":
   "diag-silo-first-1"`), byte-for-byte as exported. The folder appears with the first one. They are not
   matrix v1 runs: `harness/finalize.py` refuses them, `harness/report.py` and `harness/validate.py` never
-  read them, and no figure on the results page comes from them. The run goes SILO first from a cool phone,
+  read them as runs, and no chart, table or statistic on the results page comes from them. The one
+  exception is a labelled "what the diagnostic showed" box in the iPhone 15 Plus station, which
+  `harness/report.py` reads straight from the capture. The run goes SILO first from a cool phone,
   then SISO, with a still screen, and records the decode rate of every 64-token window. It exists to
-  explain the iPhone 15 Plus SILO step (README, caveat 3). Read one with
+  explain the iPhone 15 Plus SILO step (README, "The SILO step: what is known"). Read one with
   `python3 harness/diagnose.py results/diagnostics/<file>.json`. It prints the window rates, the steps
   between repeats and the thermal transitions, then says which explanation the data are consistent with:
   a state change (H1), slow decode at long context (H2), or the app's live chart (H3). For full speed it
@@ -47,12 +51,15 @@ a new run with a note, so the record stays auditable.
 
 App records carry `uiDuringRepeats`. `"still"` means nothing on the phone's screen redrew while a
 repeat measured; the app updated its chart only in the 3 s pause between repeats. `"live"` means the
-run screen redrew a live decode chart every 16 tokens during each repeat, which competes with Metal
-decode for the GPU: on the iPhone 15 Plus, SILO decode sat at about 25–32 tok/s that way and ran
-47–56 tok/s on the diagnostic's still screen (a run that also put SILO first, on a cool phone, so the
-chart is the leading suspect, not a proven cause). Every app capture made before the field existed was live,
-including both iPhone 15 Plus captures in `captures/`; their records here predate the field and lack
-it. The measurement protocol is the same either way.
+run screen redrew a live decode chart every 16 tokens during each repeat. App captures made before
+the field existed were live and lack the key: finalize.py marks their records `"live"` (the 2026-11-08
+22:32Z capture), and the 2026-10-05 records, finalized before the field, lack it. The measurement
+protocol is the same either way.
+
+The iPhone 15 Plus SILO step was first suspected to come from the live chart. A still-screen session
+(2026-11-08 23:13Z) shows the step too, so the chart is not its main cause. After the step, SILO ran
+30–35 tok/s in that still-screen session and 25–26 tok/s in the cold live-chart session; that is one
+run each, and the gap is not read as an effect of the chart. The cause is still unexplained.
 
 ## Errata
 
